@@ -28,7 +28,7 @@ class Cinema(CoreModels.TimeStampedModel):
     """
 
     name = models.CharField(max_length=250)
-    rows = models.IntegerField()
+    rows = models.PositiveIntegerField()
     seats_per_row = models.IntegerField()
     address = models.TextField()
     city = models.ForeignKey(City, on_delete=models.CASCADE)

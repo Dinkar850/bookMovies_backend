@@ -46,7 +46,7 @@ class Seat(CoreModels.TimeStampedModel):
     """
 
     seat_row = models.CharField(max_length=1)
-    seat_number = models.IntegerField()
+    seat_number = models.PositiveIntegerField()
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
 
     def __str__(self):
