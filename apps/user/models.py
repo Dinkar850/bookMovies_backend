@@ -15,6 +15,7 @@ class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     - **first_name**: user's first name
     - **last_name**: user's last name (is optional)
     - **phone_number**: user's 10 digit phone number, unique
+    - **profile_image**: user's profile image(optional)
     - **is_active**: mimics default user's is active state of user
     - **is_staff**: enables user login in admin panel
     - **required_fields**: first_name, phone_number, email and password
@@ -26,6 +27,9 @@ class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=70)
     last_name = models.CharField(max_length=70, blank=True)
     phone_number = models.CharField(max_length=10, unique=True)
+    profile_image = models.ImageField(
+        upload_to="profile_images/", blank=True, null=True
+    )
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

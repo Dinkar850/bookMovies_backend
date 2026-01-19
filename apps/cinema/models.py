@@ -3,19 +3,6 @@ from django.db import models
 from apps.core import models as CoreModels
 
 
-class City(CoreModels.TimeStampedModel):
-    """
-    City model that contains:
-
-    - **name**: name of the city
-    """
-
-    name = models.CharField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-
-
 class Cinema(CoreModels.TimeStampedModel):
     """
     Cinema model that contains:
@@ -31,7 +18,7 @@ class Cinema(CoreModels.TimeStampedModel):
     rows = models.PositiveIntegerField()
     seats_per_row = models.IntegerField()
     address = models.TextField()
-    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    city = models.ForeignKey(CoreModels.City, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.name}, {self.address}, {self.city}"

@@ -27,3 +27,29 @@ class Language(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+
+class City(TimeStampedModel):
+    """
+    City model that contains:
+
+    - **name**: name of the city
+    """
+
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Genre(TimeStampedModel):
+    """
+    Genre model that contains:
+
+    - **name**: name of the genre
+    """
+
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name

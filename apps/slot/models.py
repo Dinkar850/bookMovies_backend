@@ -13,6 +13,8 @@ class Slot(CoreModels.TimeStampedModel):
     - **movie**: foreign key to external Movie relation (many-to-one)
     - **cinema**: foreign key to external Cinema relation (many-to-one)
     - **language**: foreign key to external Language relation (many-to-one)
+    - **is_active**: decides whether slot is active or not
+
 
     """
 
@@ -21,6 +23,7 @@ class Slot(CoreModels.TimeStampedModel):
     movie = models.ForeignKey(MovieModels.Movie, on_delete=models.CASCADE)
     cinema = models.ForeignKey(CinemaModels.Cinema, on_delete=models.CASCADE)
     language = models.ForeignKey(CoreModels.Language, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.movie}, {self.cinema}, {self.date_time}"

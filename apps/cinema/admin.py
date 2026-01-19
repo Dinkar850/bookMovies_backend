@@ -1,6 +1,5 @@
 from django.contrib import admin
 
-from .models import Cinema, City
+from .models import Cinema
 
 admin.site.register(Cinema)
-admin.site.register(City)

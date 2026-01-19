@@ -3,19 +3,6 @@ from django.db import models
 from apps.core import models as CoreModels
 
 
-class Genre(CoreModels.TimeStampedModel):
-    """
-    Genre model that contains:
-
-    - **name**: name of the genre
-    """
-
-    name = models.CharField(max_length=50, unique=True)
-
-    def __str__(self):
-        return self.name
-
-
 class Movie(CoreModels.TimeStampedModel):
     """
     Movie model that contains:
@@ -34,7 +21,7 @@ class Movie(CoreModels.TimeStampedModel):
     duration = models.DurationField()
     release_date = models.DateField()
     cover_image = models.ImageField(upload_to="movie_covers/", blank=True, null=True)
-    genre = models.ManyToManyField(Genre)
+    genre = models.ManyToManyField(CoreModels.Genre)
     language = models.ManyToManyField(CoreModels.Language)
 
     def __str__(self):
