@@ -16,9 +16,17 @@ class Cinema(CoreModels.TimeStampedModel):
 
     name = models.CharField(max_length=250)
     rows = models.PositiveIntegerField()
-    seats_per_row = models.IntegerField()
+    seats_per_row = models.PositiveIntegerField()
     address = models.TextField()
     city = models.ForeignKey(CoreModels.City, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "address", "city"],
+                name="unique_cinema_per_address_city",
+            )
+        ]
 
     def __str__(self):
         return f"{self.name}, {self.address}, {self.city}"

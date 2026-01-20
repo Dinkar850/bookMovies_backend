@@ -49,7 +49,7 @@ class Seat(CoreModels.TimeStampedModel):
     seat_row = models.CharField(max_length=1)
     seat_number = models.PositiveIntegerField()
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
-    slot = models.ForeignKey(SlotModels.Slot, on_delete=models.CASCADE)
+    slot = models.ForeignKey(SlotModels.Slot, on_delete=models.CASCADE, editable=False)
 
     class Meta:
         constraints = [
@@ -58,6 +58,13 @@ class Seat(CoreModels.TimeStampedModel):
                 name="unique_seats_per_slot",
             )
         ]
+
+    def save(self, *args, **kwargs):
+        """Maintains consistent slots from booking id being saved directly as slot in seat"""
+
+        if self.booking_id:
+            self.slot_id = self.booking.slot_id
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.seat_row}{self.seat_number}"

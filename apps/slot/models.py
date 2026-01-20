@@ -25,5 +25,13 @@ class Slot(CoreModels.TimeStampedModel):
     language = models.ForeignKey(CoreModels.Language, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["date_time", "movie", "cinema"],
+                name="unique_slot_per_movie_cinema_date_time",
+            )
+        ]
+
     def __str__(self):
         return f"{self.date_time}, {self.movie}, {self.cinema}, {self.language}"

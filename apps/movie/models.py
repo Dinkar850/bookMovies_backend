@@ -12,8 +12,8 @@ class Movie(CoreModels.TimeStampedModel):
     - **duration**: duration of the movie
     - **release_date**: release date of the movie
     - **cover_image**: cover image of the movie
-    - **genre**: foreign key to external City relation (many-to-many)
-    - **language**: foreign key to external Language relation (many-to-many)
+    - **genre**: foreign key reference to genre (many-to-many)
+    - **language**: foreign key reference to language (many-to-many)
     """
 
     name = models.CharField(max_length=250, unique=True)
