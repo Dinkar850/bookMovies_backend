@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class SlotsConfig(AppConfig):
+class SlotConfig(AppConfig):
     name = "apps.slot"
