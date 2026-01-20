@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
 from os import environ as env
 from pathlib import Path
 
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "apps.core",
     "apps.user",
     "apps.movie",
@@ -54,6 +56,25 @@ if DEBUG:
     INSTALLED_APPS += [
         "debug_toolbar",
     ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    )
+}
+
+# Settings for jwt tokens
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
+
+# For django-debug-toolbar
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+]
 
 # Sets custom user model
 AUTH_USER_MODEL = "user.User"
@@ -92,12 +113,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
-
-# For django-debug-toolbar
-INTERNAL_IPS = [
-    "127.0.0.1",
-    "localhost",
-]
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
