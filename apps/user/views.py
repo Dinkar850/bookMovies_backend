@@ -30,7 +30,7 @@ class RegisterView(generics.CreateAPIView):
     """
     Registers new user plus:
     - Attaches refresh token in HttpOnly cookie for web
-    - Returns access and refresh tokens for registered user in body
+    - Returns access token for registered user in body
     """
 
     serializer_class = UserSerializer
@@ -54,7 +54,7 @@ class LoginView(views.TokenObtainPairView):
     """
     Overrides SimpleJWT default:
     - sets refresh token in HttpOnly cookie for web
-    - returns access and refresh tokens in res body
+    - returns access token in res body
     """
 
     serializer_class = TokenObtainPairSerializer
@@ -106,7 +106,7 @@ class TokenRefreshView(views.TokenRefreshView):
     """Custom `TokenRefreshView` that overrides post mixin for accessing refresh token from cookie instead of accessing from body"""
 
     def post(self, request, *args, **kwargs):
-        '''Overrides post mixin for getting refresh token from cookies'''
+        """Overrides post mixin for getting refresh token from cookies"""
         refresh = request.COOKIES.get("refresh")
 
         if refresh:
