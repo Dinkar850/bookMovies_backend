@@ -63,7 +63,7 @@ class Seat(CoreModels.TimeStampedModel):
         """Maintains consistent slots from booking id being saved directly as slot in seat"""
 
         if self.booking_id:
-            self.slot_id = self.booking.slot_id
+            self.slot = self.booking.slot
         super().save(*args, **kwargs)
 
     def __str__(self):
