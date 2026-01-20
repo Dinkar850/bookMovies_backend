@@ -43,11 +43,21 @@ class Seat(CoreModels.TimeStampedModel):
     - **seat_row**: row corresponding to the seat
     - **seat_number**: position of seat in that row
     - **booking**: foreign key reference to the Booking table(many-to-one)
+    - **slot**: foreign key reference to the Slot table(many-to-one)
     """
 
     seat_row = models.CharField(max_length=1)
     seat_number = models.PositiveIntegerField()
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
+    slot = models.ForeignKey(SlotModels.Slot, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["slot", "seat_row", "seat_number"],
+                name="unique_seats_per_slot",
+            )
+        ]
 
     def __str__(self):
         return f"{self.seat_row}{self.seat_number}"

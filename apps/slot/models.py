@@ -26,4 +26,4 @@ class Slot(CoreModels.TimeStampedModel):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.movie}, {self.cinema}, {self.date_time}"
+        return f"{self.date_time}, {self.movie}, {self.cinema}, {self.language}"
