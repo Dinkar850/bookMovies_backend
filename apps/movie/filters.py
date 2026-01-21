@@ -17,7 +17,7 @@ class MovieFilter(django_filters.FilterSet):
     - **genre**: multiple strings and comma separated
     - **language**: multiple strings and comma separated
     - **cinema_id**: multiple ids(numbers) and comma separated
-    - **release_date**: greater than entered date
+    - **release_date**: greater than or equal to entered date
     """
 
     genre = CharInFilter(field_name="genre__name", lookup_expr="in", distinct=True)

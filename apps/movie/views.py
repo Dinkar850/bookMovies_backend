@@ -2,6 +2,7 @@ from django.utils import timezone
 from rest_framework import generics
 
 from apps.core import mixins as CoreMixins
+from apps.core import views as CoreViews
 
 from .filters import MovieFilter
 from .models import Movie
@@ -9,11 +10,13 @@ from .serializers import MovieDetailsSerializer, MovieListSerializer
 
 
 class MovieBaseMixin(CoreMixins.UpcomingSlotsQuerySetMixin):
+    """Sets base queryset to all movies for returning movies that contain a slot"""
+
     queryset = Movie.objects.all()
     prefetch_related_args = ("genre", "language")
 
 
-class MovieListView(MovieBaseMixin, CoreMixins.ListConfigMixin):
+class MovieListView(MovieBaseMixin, CoreViews.ListView):
     """
     View for movie lists that:
     - filters on cinema_id, genre, language, release_date
@@ -32,15 +35,8 @@ class MovieListView(MovieBaseMixin, CoreMixins.ListConfigMixin):
         return self.base_queryset(now)
 
 
-class MovieDetailsView(
-    MovieBaseMixin, CoreMixins.UpcomingSlotsPrefetchMixin, generics.RetrieveAPIView
-):
-    """
-    View for movie details that:
-    - retrieves all information that was present in movie list details
-    - additionally adds description and slots for that movie
-    - fetches slots for current movie
-    """
+class MovieDetailsView(MovieBaseMixin, generics.RetrieveAPIView):
+    """View for movie details that retrieves all information that was present in movie list details for a movie that has at least one active slot"""
 
     serializer_class = MovieDetailsSerializer
 
@@ -48,4 +44,4 @@ class MovieDetailsView(
         """Custom query setter which sets now to the time of calling of request"""
 
         now = timezone.now()
-        return self.slots_prefetch_queryset(self.base_queryset(now), now)
+        return self.base_queryset(now)
