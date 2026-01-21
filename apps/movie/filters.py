@@ -33,4 +33,4 @@ class MovieFilter(django_filters.FilterSet):
 
     class Meta:
         model = Movie
-        fields = ["genre", "language", "release_date", "cinema_id"]
+        fields = ["genre", "language", "cinema_id", "release_date"]
