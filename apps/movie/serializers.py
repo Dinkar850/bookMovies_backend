@@ -14,15 +14,15 @@ class MovieListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Movie
-        fields = ["id", "name", "genre", "language", "cover_image"]
+        fields = ["id", "name", "genre", "language", "cover_image", "release_date"]
 
 
 class MovieDetailsSerializer(MovieListSerializer):
     """
     Serializer for movie details:
     - returns all details as in `MovieListSerializer`
-    - additonally include description and release_date
+    - additonally include description
     """
 
     class Meta(MovieListSerializer.Meta):
-        fields = MovieListSerializer.Meta.fields + ["description", "release_date"]
+        fields = MovieListSerializer.Meta.fields + ["description"]
