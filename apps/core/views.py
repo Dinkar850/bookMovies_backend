@@ -1,7 +1,16 @@
-from rest_framework import generics
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics
 
 from .models import City, Genre, Language
+from .pagination import BaseCursorPagination
 from .serializers import CitySerializer, GenreSerializer, LanguageSerializer
+
+
+class ListView(generics.ListAPIView):
+    """Base list api view for attaching pagination classes and filter backends"""
+
+    pagination_class = BaseCursorPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
 
 
 class GenreListView(generics.ListAPIView):
