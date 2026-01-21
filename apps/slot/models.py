@@ -20,9 +20,15 @@ class Slot(CoreModels.TimeStampedModel):
 
     date_time = models.DateTimeField()
     price = models.PositiveIntegerField()
-    movie = models.ForeignKey(MovieModels.Movie, on_delete=models.CASCADE)
-    cinema = models.ForeignKey(CinemaModels.Cinema, on_delete=models.CASCADE)
-    language = models.ForeignKey(CoreModels.Language, on_delete=models.CASCADE)
+    movie = models.ForeignKey(
+        MovieModels.Movie, on_delete=models.CASCADE, related_name="slots"
+    )
+    cinema = models.ForeignKey(
+        CinemaModels.Cinema, on_delete=models.CASCADE, related_name="slots"
+    )
+    language = models.ForeignKey(
+        CoreModels.Language, on_delete=models.CASCADE, related_name="slots"
+    )
     is_active = models.BooleanField(default=True)
 
     class Meta:

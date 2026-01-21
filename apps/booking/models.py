@@ -29,8 +29,12 @@ class Booking(CoreModels.TimeStampedModel):
         max_length=1, choices=BookingStatus, default=BookingStatus.PENDING
     )
 
-    slot = models.ForeignKey(SlotModels.Slot, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserModels.User, on_delete=models.CASCADE)
+    slot = models.ForeignKey(
+        SlotModels.Slot, on_delete=models.CASCADE, related_name="bookings"
+    )
+    user = models.ForeignKey(
+        UserModels.User, on_delete=models.CASCADE, related_name="bookings"
+    )
 
     def __str__(self):
         return f"{self.status}: {self.user}, {self.slot}"
@@ -48,8 +52,10 @@ class Seat(CoreModels.TimeStampedModel):
 
     seat_row = models.CharField(max_length=1)
     seat_number = models.PositiveIntegerField()
-    booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
-    slot = models.ForeignKey(SlotModels.Slot, on_delete=models.CASCADE, editable=False)
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="seats")
+    slot = models.ForeignKey(
+        SlotModels.Slot, on_delete=models.CASCADE, editable=False, related_name="seats"
+    )
 
     class Meta:
         constraints = [

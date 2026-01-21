@@ -21,8 +21,8 @@ class Movie(CoreModels.TimeStampedModel):
     duration = models.DurationField()
     release_date = models.DateField()
     cover_image = models.ImageField(upload_to="movie_covers/", blank=True, null=True)
-    genre = models.ManyToManyField(CoreModels.Genre)
-    language = models.ManyToManyField(CoreModels.Language)
+    genre = models.ManyToManyField(CoreModels.Genre, related_name="movies")
+    language = models.ManyToManyField(CoreModels.Language, related_name="movies")
 
     def __str__(self):
         return self.name

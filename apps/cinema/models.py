@@ -18,7 +18,9 @@ class Cinema(CoreModels.TimeStampedModel):
     rows = models.PositiveIntegerField()
     seats_per_row = models.PositiveIntegerField()
     address = models.TextField()
-    city = models.ForeignKey(CoreModels.City, on_delete=models.CASCADE)
+    city = models.ForeignKey(
+        CoreModels.City, on_delete=models.CASCADE, related_name="cinemas"
+    )
 
     class Meta:
         constraints = [
