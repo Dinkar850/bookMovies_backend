@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from apps.slot import serializers as SlotSerializers
-
 from .models import Cinema
 
 
@@ -20,14 +18,10 @@ class CinemaListSerializer(serializers.ModelSerializer):
 
 class CinemaDetailsSerializer(CinemaListSerializer):
     """
-    Serializer for cinema details with slots that:
+    Serializer for cinema details that:
     - returns all details as in `CinemaListSerializer`
-    - adds rows, seats_per_row and slots information fetched by `CinemaDetailsView` in attribute `active_slots`
+    - adds `rows` and `seats_per_row`
     """
 
-    slots = SlotSerializers.SlotListSerializer(
-        source="active_slots", many=True, read_only=True
-    )
-
     class Meta(CinemaListSerializer.Meta):
-        fields = CinemaListSerializer.Meta.fields + ["rows", "seats_per_row", "slots"]
+        fields = CinemaListSerializer.Meta.fields + ["rows", "seats_per_row"]
