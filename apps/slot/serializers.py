@@ -65,7 +65,15 @@ class SlotDetailsSerializer(SlotListSerializer):
     """
 
     cinema = CinemaDetailsNestedSerializer(read_only=True)
-    booked_seats = serializers.StringRelatedField(many=True, read_only=True)
+    booked_seats = serializers.SerializerMethodField()
 
     class Meta(SlotListSerializer.Meta):
         fields = SlotListSerializer.Meta.fields + ["booked_seats"]
+
+    def get_booked_seats(self, slot):
+        """Returns the flattened list of string representation of booked seats from `slot.bookings` set by `SlotDetailsView` through `booking.booked_seats`"""
+        return [
+            str(seat)
+            for booking in slot.confirmed_bookings
+            for seat in booking.booked_seats
+        ]
