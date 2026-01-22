@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from apps.cinema import models as CinemaModels
 from apps.core import models as CoreModels
@@ -33,11 +34,19 @@ class Slot(CoreModels.TimeStampedModel):
     )
 
     def clean(self):
-        """Raises error if one tries to create a slot for a movie and cinema before latest slot's end time: `slot's movie duration + slot's buffer_time`"""
+        """Raises error if one tries to
+        - create a slot before its movie's `release_date`
+        - create a slot for a movie and cinema before latest slot's end time: `slot's movie duration + slot's buffer_time`
+        """
         super().clean()
 
         if not (self.movie_id and self.cinema_id and self.date_time):
             return
+
+        if timezone.localdate(self.date_time) < self.movie.release_date:
+            raise ValidationError(
+                f"Cannot create a slot for a date before movie's release date: {self.movie.release_date}"
+            )
 
         latest_slot = (
             Slot.objects.filter(
