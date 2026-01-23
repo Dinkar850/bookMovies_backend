@@ -54,16 +54,12 @@ class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
             booking__status=BookingModels.Booking.BookingStatus.BOOKED
         ).order_by("seat_row", "seat_number")
 
-        print(booked_seats_queryset)
-
         # queryset for prefetching confirmed seats from bookings in Slot model using the previously defined `booked_seats_queryset` to be used in final queryset
         confirmed_bookings_queryset = BookingModels.Booking.objects.filter(
             status=BookingModels.Booking.BookingStatus.BOOKED
         ).prefetch_related(
             Prefetch("seats", queryset=booked_seats_queryset, to_attr="booked_seats")
         )
-
-        print(confirmed_bookings_queryset)
 
         # queryset for retrieving booked seats from slots -> bookings -> seats
         return self.base_queryset(now).prefetch_related(
