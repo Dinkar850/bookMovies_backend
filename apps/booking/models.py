@@ -55,7 +55,7 @@ class Seat(CoreModels.TimeStampedModel):
     )
     seat_number = models.PositiveIntegerField(
         validators=[validators.MinValueValidator(1)],
-        help_text="Specitfy position of the seat in the row (1-indexed)",
+        help_text="Specify position of the seat in the row (1-indexed)",
     )
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="seats")
 

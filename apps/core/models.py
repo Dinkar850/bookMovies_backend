@@ -10,7 +10,7 @@ class TimeStampedModel(models.Model):
     - **updated_at**: updates the time stamp on save
     """
 
-    created_at = models.DateTimeField(db_default=timezone.now(), editable=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

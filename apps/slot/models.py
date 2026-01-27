@@ -26,8 +26,6 @@ class Slot(CoreModels.TimeStampedModel):
     schedule = models.DateTimeField(help_text="Takes date and time of the slot")
     price = models.PositiveIntegerField()
     buffer_time = models.DurationField(
-        blank=True,
-        null=True,
         help_text="Enter additional time for intervals / cleaning if applicable",
     )
     movie = models.ForeignKey(

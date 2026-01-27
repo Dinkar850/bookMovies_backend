@@ -55,6 +55,7 @@ class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["first_name", "phone_number"]
 
     objects = UserManager()
 
