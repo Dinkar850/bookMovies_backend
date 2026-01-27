@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 from rest_framework import generics, permissions, response, status
 from rest_framework_simplejwt import tokens, views
 
@@ -26,6 +28,18 @@ def set_refresh_cookie(res, refresh_token):
     )
 
 
+def clear_refresh_cookie(res):
+    """Clears refresh cookie from response"""
+    is_prod = not settings.DEBUG
+
+    res.delete_cookie(
+        key="refresh",
+        samesite="None" if is_prod else "Lax",
+        path="/api/auth",
+    )
+
+
+@method_decorator(csrf_protect, name="dispatch")
 class RegisterView(generics.CreateAPIView):
     """
     Registers new user plus:
@@ -50,6 +64,7 @@ class RegisterView(generics.CreateAPIView):
         return res
 
 
+@method_decorator(csrf_protect, name="dispatch")
 class LoginView(views.TokenObtainPairView):
     """
     Overrides SimpleJWT default:
@@ -61,14 +76,22 @@ class LoginView(views.TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         res = super().post(request, *args, **kwargs)
+
+        if res.status_code != status.HTTP_200_OK:
+            return res
+
         refresh = res.data.pop("refresh")
         access = res.data.get("access")
+
+        if not refresh or not access:
+            return res
 
         res = response.Response({"access": access}, status=status.HTTP_200_OK)
         set_refresh_cookie(res, refresh)
         return res
 
 
+@method_decorator(csrf_protect, name="dispatch")
 class UserView(generics.RetrieveUpdateDestroyAPIView):
     """
     View for User model that:
@@ -94,14 +117,18 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
         return UserSerializer
 
     def destroy(self, request, *args, **kwargs):
-        """Responsible for deactivating user by setting `is_active` as false"""
+        """Responsible for clearing response cookie and deactivating user by setting `is_active` as false"""
 
         user = self.get_object()
         user.is_active = False
         user.save(update_fields=["is_active"])
-        return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+        res = response.Response(status=status.HTTP_204_NO_CONTENT)
+        clear_refresh_cookie(res)
+        return res
 
 
+@method_decorator(csrf_protect, name="dispatch")
 class TokenRefreshView(views.TokenRefreshView):
     """Custom `TokenRefreshView` that overrides post mixin for accessing refresh token from cookie instead of accessing from body"""
 
@@ -109,12 +136,17 @@ class TokenRefreshView(views.TokenRefreshView):
         """Overrides post mixin for getting refresh token from cookies"""
         refresh = request.COOKIES.get("refresh")
 
-        if refresh:
-            request.data["refresh"] = refresh
-        else:
+        if not refresh:
             return response.Response(
                 {"detail": "Missing refresh token"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        return super().post(request, *args, **kwargs)
+        # For cases when request.data is immutable
+        data = request.data.copy()
+        data["refresh"] = refresh
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        return self.perform_refresh(serializer)

@@ -112,6 +112,11 @@ TEMPLATES = [
     },
 ]
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+]
+
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
