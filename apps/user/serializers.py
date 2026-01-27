@@ -39,7 +39,7 @@ class TokenObtainPairSerializer(jwtSerializers.TokenObtainPairSerializer):
     def validate(self, attrs):
         email = attrs["email"]
 
-        if type(email) is str:
+        if isinstance(email, str):
             attrs["email"] = attrs["email"].lower()
 
         return super().validate(attrs)
