@@ -1,3 +1,4 @@
+from django.core import validators
 from django.db import models
 
 from apps.core import models as CoreModels
@@ -14,9 +15,17 @@ class Cinema(CoreModels.TimeStampedModel):
     - **city**: foreign key to external City relation (many-to-one)
     """
 
-    name = models.CharField(max_length=250)
-    rows = models.PositiveIntegerField()
-    seats_per_row = models.PositiveIntegerField()
+    name = models.CharField(
+        max_length=250, help_text="Maximum 250 characters are allowed"
+    )
+    rows = models.PositiveIntegerField(
+        validators=[validators.MinLengthValidator(5)],
+        help_text="Specify total rows of seats in the cinema, minimum 5 are required",
+    )
+    seats_per_row = models.PositiveIntegerField(
+        validators=[validators.MinLengthValidator(5)],
+        help_text="Minimum 5 seats per row are required",
+    )
     address = models.TextField()
     city = models.ForeignKey(
         CoreModels.City, on_delete=models.CASCADE, related_name="cinemas"

@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from django.core import exceptions, validators
 from django.db import models
 
 from apps.core import models as CoreModels
@@ -44,19 +44,24 @@ class Booking(CoreModels.TimeStampedModel):
 class Seat(CoreModels.TimeStampedModel):
     """
     Seat model that contains:
-
     - **seat_row**: row corresponding to the seat
     - **seat_number**: position of seat in that row
     - **booking**: foreign key reference to the Booking table(many-to-one)
     """
 
-    seat_row = models.PositiveIntegerField()
-    seat_number = models.PositiveIntegerField()
+    seat_row = models.PositiveIntegerField(
+        validators=[validators.MinValueValidator(1)],
+        help_text="Specify row of the seat (1-indexed)",
+    )
+    seat_number = models.PositiveIntegerField(
+        validators=[validators.MinValueValidator(1)],
+        help_text="Specitfy position of the seat in the row (1-indexed)",
+    )
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="seats")
 
     def clean(self):
         """
-        Raises exception if:
+        Raises exception in admin panel only, if:
         - another confirmed seat with the same row, number, slot derived from booking_id is being added
         - entered seat row is not in defined range
         - entered seat number is not in defined range
@@ -68,14 +73,17 @@ class Seat(CoreModels.TimeStampedModel):
 
         cinema = self.booking.slot.cinema
 
-        if self.seat_row < 1 or self.seat_row > cinema.rows:
-            raise ValidationError(f"Row must be between 1 and {cinema.rows}")
+        # Checks if entered seat row is greater than rows for the linked cinema
+        if self.seat_row > cinema.rows:
+            raise exceptions.ValidationError(f"Row must be between 1 and {cinema.rows}")
 
-        if self.seat_number < 1 or self.seat_number > cinema.seats_per_row:
-            raise ValidationError(
+        # Checks if entered seat number is greater than seats for the linked cinema
+        if self.seat_number > cinema.seats_per_row:
+            raise exceptions.ValidationError(
                 f"Seat number must be between 1 and {cinema.seats_per_row}"
             )
 
+        # Checks if another confirmed seat for the slot of a previous booking already exists
         if (
             Seat.objects.filter(
                 booking__slot_id=self.booking.slot_id,
@@ -86,9 +94,11 @@ class Seat(CoreModels.TimeStampedModel):
             .exclude(pk=self.pk)
             .exists()
         ):
-            raise ValidationError(
+            raise exceptions.ValidationError(
                 "Another confirmed seat with the same seat row, seat number and slot already exists"
             )
 
     def __str__(self):
-        return f"row:{self.seat_row}, seat:{self.seat_number}"
+        return (
+            f"{self.booking}-seat_row:{self.seat_row}, seat_number:{self.seat_number}"
+        )

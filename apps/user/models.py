@@ -1,9 +1,16 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.validators import RegexValidator
 from django.db import models
 
 from apps.core import models as CoreModels
 
 from .managers import UserManager
+
+# Validates that phone number has exactly 10 digits and none are characters other than digits
+phone_validator = RegexValidator(
+    regex=r"^[1-9]\d{9}$",
+    message="Phone number must be exactly 10 digits and cannot start with 0.",
+)
 
 
 class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
@@ -23,10 +30,23 @@ class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     - Custom user manager: UserManager
     """
 
-    email = models.EmailField(max_length=255, unique=True)
-    first_name = models.CharField(max_length=70)
-    last_name = models.CharField(max_length=70, blank=True)
-    phone_number = models.CharField(max_length=10, unique=True)
+    email = models.EmailField(
+        max_length=255, unique=True, help_text="Maximum 255 characters are allowed"
+    )
+    first_name = models.CharField(
+        max_length=70, help_text="Maximum 70 characters are allowed"
+    )
+    last_name = models.CharField(
+        max_length=70,
+        blank=True,
+        help_text="Maximum 70 characters are allowed, can be left blank",
+    )
+    phone_number = models.CharField(
+        max_length=10,
+        unique=True,
+        validators=[phone_validator],
+        help_text="Maximum 10 digits are allowed and should not start with 0",
+    )
     profile_image = models.ImageField(
         upload_to="profile_images/", blank=True, null=True
     )
@@ -35,9 +55,6 @@ class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
-
-    # Email and password are asked by default while creation
-    REQUIRED_FIELDS = ["first_name", "phone_number"]
 
     objects = UserManager()
 

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class TimeStampedModel(models.Model):
@@ -9,7 +10,7 @@ class TimeStampedModel(models.Model):
     - **updated_at**: updates the time stamp on save
     """
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(db_default=timezone.now(), editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -23,7 +24,9 @@ class Language(TimeStampedModel):
     - **name**: name of the language
     """
 
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(
+        max_length=50, unique=True, help_text="Maximum 50 characters are allowed"
+    )
 
     def __str__(self):
         return self.name
@@ -36,7 +39,9 @@ class City(TimeStampedModel):
     - **name**: name of the city
     """
 
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(
+        max_length=50, unique=True, help_text="Maximum 50 characters are allowed"
+    )
 
     def __str__(self):
         return self.name
@@ -49,7 +54,9 @@ class Genre(TimeStampedModel):
     - **name**: name of the genre
     """
 
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(
+        max_length=50, unique=True, help_text="Maximum 50 characters are allowed"
+    )
 
     def __str__(self):
         return self.name
