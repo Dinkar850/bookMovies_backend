@@ -19,11 +19,11 @@ class Cinema(CoreModels.TimeStampedModel):
         max_length=250, help_text="Maximum 250 characters are allowed"
     )
     rows = models.PositiveIntegerField(
-        validators=[validators.MinLengthValidator(5)],
+        validators=[validators.MinValueValidator(5)],
         help_text="Specify total rows of seats in the cinema, minimum 5 are required",
     )
     seats_per_row = models.PositiveIntegerField(
-        validators=[validators.MinLengthValidator(5)],
+        validators=[validators.MinValueValidator(5)],
         help_text="Minimum 5 seats per row are required",
     )
     address = models.TextField()

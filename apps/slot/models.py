@@ -57,9 +57,9 @@ class Slot(CoreModels.TimeStampedModel):
             )
 
         # Checks if slot is being created for a language other than its movie's
-        if self.language not in self.movie.language:
+        if not self.movie.language.filter(pk=self.language_id).exists():
             raise exceptions.ValidationError(
-                f"Cannot create slot for a language other than its movie's languages: {self.movie.language}"
+                "Cannot create slot for a language other than its movie's languages."
             )
 
         latest_slot = (
