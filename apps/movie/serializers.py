@@ -14,7 +14,15 @@ class MovieListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Movie
-        fields = ["id", "name", "genre", "language", "cover_image", "release_date"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "genre",
+            "language",
+            "cover_image",
+            "release_date",
+        ]
 
 
 class MovieDetailsSerializer(MovieListSerializer):

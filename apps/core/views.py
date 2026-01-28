@@ -13,21 +13,21 @@ class ListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
 
 
-class GenreListView(generics.ListAPIView):
+class GenreListView(ListView):
     """View that returns a list of all genres"""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
-class LanguageListView(generics.ListAPIView):
+class LanguageListView(ListView):
     """View that returns a list of all languages"""
 
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
 
 
-class CityListView(generics.ListAPIView):
+class CityListView(ListView):
     """View that returns a list of all cities"""
 
     queryset = City.objects.all()

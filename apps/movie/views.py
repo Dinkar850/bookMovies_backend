@@ -1,4 +1,3 @@
-from django.utils import timezone
 from rest_framework import generics
 
 from apps.core import mixins as CoreMixins
@@ -29,19 +28,14 @@ class MovieListView(MovieBaseMixin, CoreViews.ListView):
     search_fields = ["name"]
 
     def get_queryset(self):
-        """Custom query setter which sets now to the time of calling of request"""
-
-        now = timezone.now()
-        return self.base_queryset(now)
+        return self.base_queryset()
 
 
 class MovieDetailsView(MovieBaseMixin, generics.RetrieveAPIView):
     """View for movie details that retrieves all information that was present in movie list details for a movie that has at least one active slot"""
 
     serializer_class = MovieDetailsSerializer
+    lookup_field = "slug"
 
     def get_queryset(self):
-        """Custom query setter which sets now to the time of calling of request"""
-
-        now = timezone.now()
-        return self.base_queryset(now)
+        return self.base_queryset()
