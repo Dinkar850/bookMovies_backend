@@ -1,4 +1,3 @@
-from django.utils import timezone
 from rest_framework import generics
 
 from apps.core import mixins as CoreMixins
@@ -13,14 +12,14 @@ class CinemaBaseMixin(CoreMixins.UpcomingSlotsQuerySetMixin):
     """Sets base queryset for returning cinemas having at least one active slot"""
 
     queryset = Cinema.objects.all()
-    prefetch_related_args = ["city"]
+    prefetch_related_args = ("city",)
 
 
 class CinemaListView(CinemaBaseMixin, CoreViews.ListView):
     """
     View for cinema lists that:
     - filters on city
-    - enables search on cinem's name
+    - enables search on cinema's name
     - paginated and ordered on `created_at`
     - only retrieves cinemas which have at least one active slots
     """
@@ -30,10 +29,7 @@ class CinemaListView(CinemaBaseMixin, CoreViews.ListView):
     search_fields = ["name"]
 
     def get_queryset(self):
-        """Custom query setter which sets now to the time of calling of request"""
-
-        now = timezone.now()
-        return self.base_queryset(now)
+        return self.base_queryset()
 
 
 class CinemaDetailsView(CinemaBaseMixin, generics.RetrieveAPIView):
@@ -46,7 +42,4 @@ class CinemaDetailsView(CinemaBaseMixin, generics.RetrieveAPIView):
     serializer_class = CinemaDetailsSerializer
 
     def get_queryset(self):
-        """Custom query setter which sets now to the time of calling of request"""
-
-        now = timezone.now()
-        return self.base_queryset(now)
+        return self.base_queryset()
