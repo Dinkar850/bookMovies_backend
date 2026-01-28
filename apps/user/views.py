@@ -149,4 +149,7 @@ class TokenRefreshView(views.TokenRefreshView):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        return self.perform_refresh(serializer)
+        return response.Response(
+            serializer.validated_data,
+            status=status.HTTP_200_OK,
+        )
