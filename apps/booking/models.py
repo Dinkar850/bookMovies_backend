@@ -99,6 +99,4 @@ class Seat(CoreModels.TimeStampedModel):
             )
 
     def __str__(self):
-        return (
-            f"{self.booking}-seat_row:{self.seat_row}, seat_number:{self.seat_number}"
-        )
+        return f"{self.seat_row},{self.seat_number}"
