@@ -1,14 +1,8 @@
 import django_filters
 
+from apps.core import filters as CoreFilters
+
 from .models import Slot
-
-
-class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
-    pass
-
-
-class NumberInFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
-    pass
 
 
 class SlotFilter(django_filters.FilterSet):
@@ -18,18 +12,22 @@ class SlotFilter(django_filters.FilterSet):
     - **city**: multiple strings and comma separated
     - **cinema_id**: multiple ids(numbers) and comma separated
     - **movie_id**: multiple ids(numbers) and comma separated
-    - **date_time**: equal to entered date
+    - **date**: equal to entered date
     """
 
-    language = CharInFilter(
+    language = CoreFilters.CharInFilter(
         field_name="language__name", lookup_expr="in", distinct=True
     )
-    city = CharInFilter(
+    city = CoreFilters.CharInFilter(
         field_name="cinema__city__name", lookup_expr="in", distinct=True
     )
-    cinema_id = NumberInFilter(field_name="cinema", lookup_expr="in", distinct=True)
-    movie_id = NumberInFilter(field_name="movie", lookup_expr="in", distinct=True)
-    date = django_filters.DateTimeFilter(field_name="date_time", lookup_expr="date")
+    cinema_id = CoreFilters.NumberInFilter(
+        field_name="cinema", lookup_expr="in", distinct=True
+    )
+    movie_id = CoreFilters.NumberInFilter(
+        field_name="movie", lookup_expr="in", distinct=True
+    )
+    date = django_filters.DateTimeFilter(field_name="schedule", lookup_expr="date")
 
     class Meta:
         model = Slot

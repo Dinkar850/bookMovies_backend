@@ -44,7 +44,7 @@ class SlotListSerializer(serializers.ModelSerializer):
     - has nested relation with movies to show movie's id, name and languages
     - has nested relation with cinemas to show cinema's id, name, address and city
     - has string based relation for showing direct string associated with language's `__str__` method
-    - additionally returns slot's id, date_time and price
+    - additionally returns slot's id, schedule and price
     """
 
     movie = MovieNestedSerializer(read_only=True)
@@ -53,7 +53,7 @@ class SlotListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Slot
-        fields = ["id", "date_time", "price", "language", "movie", "cinema"]
+        fields = ["id", "schedule", "price", "language", "movie", "cinema"]
 
 
 class SlotDetailsSerializer(SlotListSerializer):
@@ -71,7 +71,10 @@ class SlotDetailsSerializer(SlotListSerializer):
         fields = SlotListSerializer.Meta.fields + ["booked_seats"]
 
     def get_booked_seats(self, slot):
-        """Returns the flattened list of string representation of booked seats from `slot.bookings` set by `SlotDetailsView` through `booking.booked_seats`"""
+        """
+        Returns the flattened list of string representation of booked seats from `slot.confirmed_bookings` set by `SlotDetailsView` through `booking.booked_seats`
+        Requires `confirmed_bookings` and `booked_seats` to be set by the view using this serializer
+        """
         return [
             str(seat)
             for booking in slot.confirmed_bookings
