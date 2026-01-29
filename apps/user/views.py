@@ -1,6 +1,4 @@
 from django.conf import settings
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
 from rest_framework import generics, permissions, response, status
 from rest_framework_simplejwt import tokens, views
 
@@ -39,7 +37,7 @@ def clear_refresh_cookie(res):
     )
 
 
-@method_decorator(csrf_protect, name="dispatch")
+# @method_decorator(csrf_protect, name="dispatch")
 class RegisterView(generics.CreateAPIView):
     """
     Registers new user plus:
@@ -64,7 +62,7 @@ class RegisterView(generics.CreateAPIView):
         return res
 
 
-@method_decorator(csrf_protect, name="dispatch")
+# @method_decorator(csrf_protect, name="dispatch")
 class LoginView(views.TokenObtainPairView):
     """
     Overrides SimpleJWT default:
@@ -91,7 +89,7 @@ class LoginView(views.TokenObtainPairView):
         return res
 
 
-@method_decorator(csrf_protect, name="dispatch")
+# @method_decorator(csrf_protect, name="dispatch")
 class UserView(generics.RetrieveUpdateDestroyAPIView):
     """
     View for User model that:
@@ -128,7 +126,7 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
         return res
 
 
-@method_decorator(csrf_protect, name="dispatch")
+# @method_decorator(csrf_protect, name="dispatch")
 class TokenRefreshView(views.TokenRefreshView):
     """Custom `TokenRefreshView` that overrides post mixin for accessing refresh token from cookie instead of accessing from body"""
 

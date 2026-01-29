@@ -13,15 +13,17 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name", "email", "phone_number", "password"]
         extra_kwargs = {"password": {"write_only": True}}
 
-    def validate_email(self, value):
-        """Checks for existence of user with same email on changing case"""
+    def to_internal_value(self, data):
+        """Checks after conversion of email into lower case directly from JSON body before insertion"""
+        data = data.copy()
 
-        value = value.lower()
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Email already exists")
-        return value
+        if "email" in data:
+            data["email"] = data["email"].lower().strip()
+
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
+        """Creates user using validated data, called when hit user.save() from `RegisterView`"""
         return User.objects.create_user(**validated_data)
 
 
