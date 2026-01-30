@@ -9,7 +9,7 @@ class SlotAdmin(admin.ModelAdmin):
         "id",
         "is_active",
         "schedule",
-        "buffer_time",
+        "end_time",
         "price",
         "movie",
         "cinema",

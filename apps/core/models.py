@@ -17,6 +17,15 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
+class ActiveableModel(models.Model):
+    """Abstract model for adding an active state using `is_active` boolean field"""
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True
+
+
 class Language(TimeStampedModel):
     """
     Language model that contains:

@@ -1,4 +1,6 @@
-from django.core import exceptions
+from datetime import datetime
+
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -7,27 +9,20 @@ from apps.core import models as CoreModels
 from apps.movie import models as MovieModels
 
 
-class Slot(CoreModels.TimeStampedModel):
+class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
     """
     Slot model that contains:
-    - **schedule**: date and time of the slot
+    - **schedule**: start date and time of the slot
+    - **end_time**: end time of the slot
     - **price**: price of the slot
-    - **buffer_time**: buffer time for intervals and cleaning per slot
     - **movie**: foreign key to external Movie relation (many-to-one)
     - **cinema**: foreign key to external Cinema relation (many-to-one)
     - **language**: foreign key to external Language relation (many-to-one)
-    - **is_active**: decides whether slot is active or not
     """
 
-    is_active = models.BooleanField(
-        default=True,
-        help_text="Mark false if slot is temporarily cancelled or has expired",
-    )
-    schedule = models.DateTimeField(help_text="Takes date and time of the slot")
+    schedule = models.DateTimeField(help_text="Takes start date and time of the slot")
+    end_time = models.TimeField(help_text="Takes end time of the slot")
     price = models.PositiveIntegerField()
-    buffer_time = models.DurationField(
-        help_text="Enter additional time for intervals / cleaning if applicable",
-    )
     movie = models.ForeignKey(
         MovieModels.Movie, on_delete=models.CASCADE, related_name="slots"
     )
@@ -43,47 +38,91 @@ class Slot(CoreModels.TimeStampedModel):
         - create a slot before its movie's `release_date`
         - create a slot for a movie and cinema before latest slot's end time: `slot's movie duration + slot's buffer_time`
         """
+
         super().clean()
+        now = timezone.now()
 
         if not (self.movie_id and self.cinema_id and self.schedule):
             return
 
+        slot_start = self.schedule
+        slot_end = timezone.make_aware(
+            datetime.combine(self.schedule.date(), self.end_time),
+            timezone.get_current_timezone(),
+        )
+
+        # Checks if slot is being created before current time and date
+        if slot_start < now:
+            raise ValidationError(
+                f"Cannot create a slot before current date and time: {now}"
+            )
+
+        # Checks if slot's end_time is being scheduled before or equal to scheduled start_time
+        if slot_end <= slot_start:
+            raise ValidationError(
+                "Cannot enter an time before or equal to the start schedule for this slot"
+            )
+
         # Checks if slot is being scheduled before its movie's release_date
         if timezone.localdate(self.schedule) < self.movie.release_date:
-            raise exceptions.ValidationError(
+            raise ValidationError(
                 f"Cannot create a slot for a date before movie's release date: {self.movie.release_date}"
             )
 
         # Checks if slot is being created for a language other than its movie's
         if not self.movie.language.filter(pk=self.language_id).exists():
-            raise exceptions.ValidationError(
+            raise ValidationError(
                 "Cannot create slot for a language other than its movie's languages."
             )
 
-        latest_slot = (
+        previous_slot = (
             Slot.objects.filter(
-                movie_id=self.movie_id,
                 cinema_id=self.cinema_id,
                 schedule__lt=self.schedule,
                 is_active=True,
             )
             .exclude(pk=self.pk)
-            .select_related("movie")
             .order_by("-schedule")
             .first()
         )
 
-        if not latest_slot:
-            return
-
-        latest_slot_end = (
-            latest_slot.schedule + latest_slot.movie.duration + latest_slot.buffer_time
+        next_slot = (
+            Slot.objects.filter(
+                cinema_id=self.cinema_id,
+                schedule__gt=self.schedule,
+                is_active=True,
+            )
+            .exclude(pk=self.pk)
+            .order_by("schedule")
+            .first()
         )
 
-        # Checks if slot is being created before the last slot has been finished (slot's movie duration + buffer_time)
-        if self.schedule < latest_slot_end:
-            raise exceptions.ValidationError(
-                f"Cannot create a slot before {latest_slot_end} for this movie and cinema"
+        if not (previous_slot and next_slot):
+            return
+
+        # Checks if slot is being created before the previous slot has been finished
+        if previous_slot:
+            # Combines date and end_time to get the end schedule of the previous slot
+            prev_end = timezone.make_aware(
+                datetime.combine(previous_slot.schedule.date(), previous_slot.end_time),
+                timezone.get_current_timezone(),
+            )
+
+            if slot_start < prev_end:
+                raise ValidationError(
+                    f"Cannot create a slot before {prev_end} for this cinema"
+                )
+
+        # Checks if slot is being created with an end schedule after an existing slot's start schedule
+        if next_slot and slot_end > next_slot.schedule:
+            # Combines date and end_time to get the end schedule of the next slot
+            next_end = timezone.make_aware(
+                datetime.combine(next_slot.schedule.date(), next_slot.end_time),
+                timezone.get_current_timezone(),
+            )
+
+            raise ValidationError(
+                f"Cannot create a slot before {next_end} for this cinema"
             )
 
     class Meta:
@@ -95,4 +134,4 @@ class Slot(CoreModels.TimeStampedModel):
         ]
 
     def __str__(self):
-        return f"{self.schedule}, {self.movie}, {self.cinema}, {self.language}"
+        return f"{self.schedule}-{self.movie}-{self.cinema}"

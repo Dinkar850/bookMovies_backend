@@ -13,7 +13,12 @@ phone_validator = RegexValidator(
 )
 
 
-class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
+class User(
+    CoreModels.TimeStampedModel,
+    CoreModels.ActiveableModel,
+    AbstractBaseUser,
+    PermissionsMixin,
+):
     """
     Initialises a custom user model for email based login
 
@@ -25,11 +30,12 @@ class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     - **profile_image**: user's profile image(optional)
     - **is_active**: mimics default user's is active state of user
     - **is_staff**: enables user login in admin panel
-    - **required_fields**: first_name, phone_number, email and password
-    - Permisions from PermissionsMixin contains is_superuser, has_perm, group permissions
-    - Custom user manager: UserManager
+    - **required_fields**: `first_name`, `phone_number`, `email` and `password`
+    - Permisions from PermissionsMixin contains `is_superuser`, `has_perm`, `group` permissions
+    - Custom user manager: `UserManager`
     """
 
+    is_staff = models.BooleanField(default=False)
     email = models.EmailField(
         max_length=255, unique=True, help_text="Maximum 255 characters are allowed"
     )
@@ -50,9 +56,6 @@ class User(CoreModels.TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     profile_image = models.ImageField(
         upload_to="profile_images/", blank=True, null=True
     )
-
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "phone_number"]
