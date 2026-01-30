@@ -17,3 +17,4 @@ class SlotAdmin(admin.ModelAdmin):
     )
     list_filter = ("language", "is_active")
     search_fields = ("movie__name", "cinema__name")
+    list_select_related = ("movie", "cinema__city", "language")

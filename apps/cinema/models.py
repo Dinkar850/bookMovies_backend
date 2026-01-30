@@ -164,4 +164,4 @@ class Seat(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
             )
 
     def __str__(self):
-        return f"{self.seat_row},{self.seat_number},{self.cinema}"
+        return f"{self.seat_row},{self.seat_number}-{self.cinema}"

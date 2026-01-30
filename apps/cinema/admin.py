@@ -8,9 +8,12 @@ class CinemaAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "rows", "seats_per_row", "address", "city")
     list_filter = ("city",)
     search_fields = ("name", "address", "city__name")
+    list_select_related = ("city",)
 
 
 @admin.register(Seat)
 class SeatAdmin(admin.ModelAdmin):
     list_display = ("id", "is_active", "seat_row", "seat_number", "cinema")
-    list_filter = ("cinema",)
+    list_filter = ("cinema", "is_active")
+    search_fields = ("cinema",)
+    list_select_related = ("cinema__city",)

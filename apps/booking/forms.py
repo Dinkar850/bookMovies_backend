@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.cinema import models as CinemaModels
+from apps.slot import models as SlotModels
 
 from .models import Booking
 
@@ -19,9 +20,16 @@ class BookingAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Filters out active seats and sorts them in the form for convenient and error prone selections
-        self.fields["seat"].queryset = CinemaModels.Seat.objects.filter(
-            is_active=True
-        ).order_by("seat_row", "seat_number")
+        self.fields["seat"].queryset = (
+            CinemaModels.Seat.objects.filter(is_active=True)
+            .select_related("cinema__city")
+            .order_by("seat_row", "seat_number")
+        )
+
+        # Optimizes queries for showing slots in admin panel's booking form
+        self.fields["slot"].queryset = SlotModels.Slot.objects.select_related(
+            "movie", "cinema__city"
+        )
 
     def clean(self):
         """A form based clean method to be used by admin's booking form for seat validation"""

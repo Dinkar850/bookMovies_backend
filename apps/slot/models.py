@@ -50,6 +50,7 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
             datetime.combine(self.schedule.date(), self.end_time),
             timezone.get_current_timezone(),
         )
+        slot_duration = slot_end - slot_start
 
         # Checks if slot is being created before current time and date
         if slot_start < now:
@@ -61,6 +62,12 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
         if slot_end <= slot_start:
             raise ValidationError(
                 "Cannot enter an time before or equal to the start schedule for this slot"
+            )
+
+        # Checks if slot duration is shorter than its movie's duration
+        if slot_duration < self.movie.duration:
+            raise ValidationError(
+                f"Slot duration: {slot_duration} cannot be shorter than movie duration: {self.movie.duration}."
             )
 
         # Checks if slot is being scheduled before its movie's release_date
@@ -97,9 +104,6 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
             .first()
         )
 
-        if not (previous_slot and next_slot):
-            return
-
         # Checks if slot is being created before the previous slot has been finished
         if previous_slot:
             # Combines date and end_time to get the end schedule of the previous slot
@@ -122,7 +126,7 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
             )
 
             raise ValidationError(
-                f"Cannot create a slot before {next_end} for this cinema"
+                f"Can only create a slot after {next_end} for the given slot's schedule and duration"
             )
 
     class Meta:

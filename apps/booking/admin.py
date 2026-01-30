@@ -8,6 +8,7 @@ from .models import Booking
 class BookingAdmin(admin.ModelAdmin):
     form = BookingAdminForm
     list_display = ("id", "status", "user", "slot")
-    list_filter = ("status",)
-    search_fields = ("user__username", "user__email")
+    list_filter = ("status", "user")
+    search_fields = ("user__email",)
     filter_horizontal = ("seat",)
+    list_select_related = ("user", "slot__movie", "slot__cinema__city")

@@ -39,4 +39,4 @@ class Booking(CoreModels.TimeStampedModel):
     seat = models.ManyToManyField(CinemaModels.Seat, related_name="bookings")
 
     def __str__(self):
-        return f"{self.status}: {self.user}, {self.slot}"
+        return f"{self.status}:{self.user}-{self.slot}"
