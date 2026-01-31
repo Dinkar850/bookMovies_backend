@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Cinema
+from .models import Cinema, Seat
 
 
 class CinemaListSerializer(serializers.ModelSerializer):
@@ -25,3 +25,11 @@ class CinemaDetailsSerializer(CinemaListSerializer):
 
     class Meta(CinemaListSerializer.Meta):
         fields = CinemaListSerializer.Meta.fields + ["rows", "seats_per_row"]
+
+
+class SeatSerializer(serializers.ModelSerializer):
+    """Serializer for seat in cinema with `id`, `seat_row`, `seat_number`"""
+
+    class Meta:
+        model = Seat
+        fields = ["id", "seat_row", "seat_number"]
