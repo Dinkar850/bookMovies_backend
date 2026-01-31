@@ -1,6 +1,6 @@
 import django_filters
 
-from apps.core import filters as CoreFilters
+from apps.core.filters import CharInFilter
 
 from .models import Cinema
 
@@ -11,9 +11,7 @@ class CinemaFilter(django_filters.FilterSet):
     - **city**: filter based on multiple cities
     """
 
-    city = CoreFilters.CharInFilter(
-        field_name="city__name", lookup_expr="in", distinct=True
-    )
+    city = CharInFilter(field_name="city__name", lookup_expr="in", distinct=True)
 
     class Meta:
         model = Cinema
