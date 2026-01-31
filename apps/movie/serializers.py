@@ -3,20 +3,25 @@ from rest_framework import serializers
 from .models import Movie
 
 
-class MovieListSerializer(serializers.ModelSerializer):
+class MovieNameSerializer(serializers.ModelSerializer):
+    """Serializer for only showing the `id` and `name`` of the movie"""
+
+    class Meta:
+        model = Movie
+        fields = ["id", "name"]
+
+
+class MovieListSerializer(MovieNameSerializer):
     """
     Serializer for movies in list:
     - returns genre and language as strings (defined in def(__str__))
     """
 
-    genre = serializers.StringRelatedField(many=True)
-    language = serializers.StringRelatedField(many=True)
+    genre = serializers.StringRelatedField(many=True, read_only=True)
+    language = serializers.StringRelatedField(many=True, read_only=True)
 
-    class Meta:
-        model = Movie
-        fields = [
-            "id",
-            "name",
+    class Meta(MovieNameSerializer.Meta):
+        fields = MovieNameSerializer.Meta.fields + [
             "slug",
             "genre",
             "language",
