@@ -1,6 +1,6 @@
+from django.utils import timezone
 from rest_framework import generics
 
-from apps.core import mixins as CoreMixins
 from apps.core import views as CoreViews
 
 from .filters import CinemaFilter
@@ -8,11 +8,19 @@ from .models import Cinema
 from .serializers import CinemaDetailsSerializer, CinemaListSerializer
 
 
-class CinemaBaseMixin(CoreMixins.UpcomingSlotsQuerySetMixin):
-    """Sets base queryset for returning cinemas having at least one active slot"""
+class CinemaBaseMixin:
+    """Sets base queryset to be used by all views"""
 
-    queryset = Cinema.objects.all()
-    prefetch_related_args = ("city",)
+    def base_queryset(self):
+        """Generates a queryset for retrieving cinema entries having at least one active slot"""
+
+        now = timezone.now()
+
+        return (
+            Cinema.objects.filter(slots__is_active=True, slots__schedule__gte=now)
+            .distinct()
+            .select_related("city")
+        )
 
 
 class CinemaListView(CinemaBaseMixin, CoreViews.ListView):
