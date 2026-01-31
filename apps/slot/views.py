@@ -179,5 +179,4 @@ class SlotViewset(ReadOnlyModelViewset):
             ],
             key=lambda seat: seat.id,
         )
-
         return slot
