@@ -14,12 +14,15 @@ from apps.core import pagination as CorePagination
 
 from .filters import BookingFilter
 from .models import Booking
-from .serializers import BookingCreateSerializer, BookingListSerializer
+from .serializers import (
+    BookingCreateRequestSerializer,
+    BookingCreateResponseSerializer,
+    BookingListSerializer,
+)
 
 
 class BookingViewSet(
     mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -33,44 +36,55 @@ class BookingViewSet(
     def get_queryset(self):
         return (
             Booking.objects.filter(user=self.request.user)
-            .select_related("slot__movie", "slot__cinema")
-            .prefetch_related("seats")
+            .select_related(
+                "slot__movie",
+                "slot__cinema__city",
+                "slot__language",
+            )
+            .prefetch_related("seat")
         )
 
     def get_serializer_class(self):
         if self.action == "create":
-            return BookingCreateSerializer
+            return BookingCreateRequestSerializer
         return BookingListSerializer
 
     def create(self, request, *args, **kwargs):
-        """Creates new booking, takes in request through `BookingCreateSerializer` and gives response through `BookingListSerializer`"""
+        """Creates new booking, takes in request through `BookingCreateRequestSerializer` and gives response through `BookingCreateResponseSerializer`"""
+
         req_serializer = self.get_serializer(data=request.data)
         req_serializer.is_valid(raise_exception=True)
         booking = req_serializer.save()
 
-        res_serializer = BookingListSerializer(
+        res_serializer = BookingCreateResponseSerializer(
             booking, context=self.get_serializer_context()
         )
-        return response.Response(res_serializer.data, status=status.HTTP_201_CREATED)
+        return response.Response(
+            {"detail": "Booking created successfully", **res_serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
 
     @decorators.action(detail=True, methods=["patch"], url_path="cancel")
     def cancel(self, request, pk=None):
         """Cancels booking through route: `/bookings/:id/cancel`"""
+
         booking = self.get_object()
 
         # Checks if booking was already cancelled
         if booking.status == Booking.BookingStatus.CANCELLED:
             raise exceptions.ValidationError(
-                {"detail": "Booking is already cancelled."}
+                {"detail": "Requested booking is already cancelled."}
             )
 
-        # Checks if a booking for an already expired slot  is not getting cancelled
+        # Checks if booking belongs to an expired slot
         if booking.slot.schedule <= timezone.now():
             raise exceptions.ValidationError(
-                {"detail": "Cannot cancel after showtime."}
+                {"detail": "Cannot cancel a booking after its slot has expired."}
             )
 
         booking.status = Booking.BookingStatus.CANCELLED
         booking.save(update_fields=["status", "updated_at"])
 
-        return response.Response({"status": "cancelled"}, status=status.HTTP_200_OK)
+        return response.Response(
+            {"detail": "Booking cancelled successfully"}, status=status.HTTP_200_OK
+        )
