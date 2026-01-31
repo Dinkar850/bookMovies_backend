@@ -1,6 +1,6 @@
 import django_filters
 
-from apps.core import filters as CoreFilters
+from apps.core.filters import CharInFilter, NumberInFilter
 
 from .models import Movie
 
@@ -14,13 +14,11 @@ class MovieFilter(django_filters.FilterSet):
     - **release_date**: greater than or equal to entered date
     """
 
-    genre = CoreFilters.CharInFilter(
-        field_name="genre__name", lookup_expr="in", distinct=True
-    )
-    language = CoreFilters.CharInFilter(
+    genre = CharInFilter(field_name="genre__name", lookup_expr="in", distinct=True)
+    language = CharInFilter(
         field_name="language__name", lookup_expr="in", distinct=True
     )
-    cinema_id = CoreFilters.NumberInFilter(
+    cinema_id = NumberInFilter(
         field_name="slots__cinema_id", lookup_expr="in", distinct=True
     )
     release_date = django_filters.DateFilter(
