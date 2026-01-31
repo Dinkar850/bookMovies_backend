@@ -29,14 +29,14 @@ class SlotDetailsSerializer(SlotListSerializer):
     - all fields from `SlotListSerializer`
     - adds `seat_per_row` and `rows` for cinema details in case slot is selected from a movie details page
     - adds `booked_seats` in that slot that gets set in `SlotDetailsViewSerializer`
-    - adds `inactive_seats` in that slot that gets set in `SlotDetailsViewSerializer`
+    - adds `active_seats` in that slot that gets set in `SlotDetailsViewSerializer`
     """
 
     cinema = CinemaSerializers.CinemaDetailsSerializer(read_only=True)
     booked_seats = CinemaSerializers.SeatSerializer(many=True, read_only=True)
-    inactive_seats = CinemaSerializers.SeatSerializer(
-        many=True, read_only=True, source="cinema.inactive_seats"
+    active_seats = CinemaSerializers.SeatSerializer(
+        many=True, read_only=True, source="cinema.active_seats"
     )
 
     class Meta(SlotListSerializer.Meta):
-        fields = SlotListSerializer.Meta.fields + ["booked_seats", "inactive_seats"]
+        fields = SlotListSerializer.Meta.fields + ["booked_seats", "active_seats"]

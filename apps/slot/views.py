@@ -54,7 +54,7 @@ class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
     serializer_class = SlotDetailsSerializer
 
     def get_queryset(self):
-        """Populates `inactive_seats` and `booked_seats` attribute for `confirmed_bookings` by using a custom queryset"""
+        """Populates `active_seats` and `booked_seats` attribute for `confirmed_bookings` by using a custom queryset"""
 
         # queryset for fetching and ordering all seats
         cinema_seats = CinemaModels.Seat.objects.order_by("seat_row", "seat_number")
@@ -77,11 +77,11 @@ class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
                 queryset=confirmed_bookings_qs,
                 to_attr="confirmed_bookings",
             ),
-            # prefetch responsible for populating inactive_seats attribute in slot object for that cinema
+            # prefetch responsible for populating active_seats attribute in slot object for that cinema
             Prefetch(
                 "cinema__seats",
-                queryset=cinema_seats.filter(is_active=False),
-                to_attr="inactive_seats",
+                queryset=cinema_seats.filter(is_active=True),
+                to_attr="active_seats",
             ),
         )
 
