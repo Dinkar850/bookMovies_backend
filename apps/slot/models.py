@@ -8,6 +8,8 @@ from apps.cinema import models as CinemaModels
 from apps.core import models as CoreModels
 from apps.movie import models as MovieModels
 
+from .constants import SlotErrors
+
 
 class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
     """
@@ -33,10 +35,21 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
         CoreModels.Language, on_delete=models.CASCADE, related_name="slots"
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("schedule", "movie", "cinema"),
+                name="unique_slot_per_movie_cinema_schedule",
+            )
+        ]
+
     def clean(self):
-        """Raises error if one tries to
-        - create a slot before its movie's `release_date`
-        - create a slot for a movie and cinema before latest slot's end time: `slot's movie duration + slot's buffer_time`
+        """Custom clean method for validating slot creation in admin panel where slot cannot be created for a:
+        - schedule before current date and time
+        - duration lesser than its movie's duration
+        - schedule before its movie's release date
+        - language other than its movie's languages
+        - schedule and duration overlapping with an existing slot
         """
 
         super().clean()
@@ -54,33 +67,23 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
 
         # Checks if slot is being created before current time and date
         if slot_start < now:
-            raise ValidationError(
-                f"Cannot create a slot before current date and time: {now}"
-            )
-
-        # Checks if slot's end_time is being scheduled before or equal to scheduled start_time
-        if slot_end <= slot_start:
-            raise ValidationError(
-                "Cannot enter an time before or equal to the start schedule for this slot"
-            )
+            raise ValidationError(f"{SlotErrors.BEFORE_NOW}: {now}")
 
         # Checks if slot duration is shorter than its movie's duration
         if slot_duration < self.movie.duration:
             raise ValidationError(
-                f"Slot duration: {slot_duration} cannot be shorter than movie duration: {self.movie.duration}."
+                f"{SlotErrors.INSUFFICIENT_DURATION}: {self.movie.duration}."
             )
 
-        # Checks if slot is being scheduled before its movie's release_date
+        # Checks if slot is being scheduled for a date before its movie's release_date
         if timezone.localdate(self.schedule) < self.movie.release_date:
             raise ValidationError(
-                f"Cannot create a slot for a date before movie's release date: {self.movie.release_date}"
+                f"{SlotErrors.BEFORE_MOVIE_RELEASE}: {self.movie.release_date}"
             )
 
-        # Checks if slot is being created for a language other than its movie's
+        # Checks if slot is being created for a language other than its movie's languages
         if not self.movie.language.filter(pk=self.language_id).exists():
-            raise ValidationError(
-                "Cannot create slot for a language other than its movie's languages."
-            )
+            raise ValidationError(SlotErrors.INVALID_LANGUAGE)
 
         previous_slot = (
             Slot.objects.filter(
@@ -114,7 +117,7 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
 
             if slot_start < prev_end:
                 raise ValidationError(
-                    f"Cannot create a slot before {prev_end} for this cinema"
+                    f"{SlotErrors.OVERLAPS_PREVIOUS_SLOT}: {prev_end}"
                 )
 
         # Checks if slot is being created with an end schedule after an existing slot's start schedule
@@ -125,17 +128,7 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
                 timezone.get_current_timezone(),
             )
 
-            raise ValidationError(
-                f"Can only create a slot after {next_end} for the given slot's schedule and duration"
-            )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["schedule", "movie", "cinema"],
-                name="unique_slot_per_movie_cinema_schedule",
-            )
-        ]
+            raise ValidationError(f"{SlotErrors.OVERLAPS_NEXT_SLOT}: {next_end}")
 
     def __str__(self):
-        return f"{self.schedule}-{self.movie}-{self.cinema}"
+        return self.schedule.strftime("%d %b %H:%M")

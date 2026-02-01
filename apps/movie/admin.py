@@ -13,5 +13,6 @@ class MovieAdmin(admin.ModelAdmin):
         "release_date",
         "cover_image",
     )
+    list_filter = ("languages", "genres")
     search_fields = ("name",)
-    filter_horizontal = ("genre", "language")
+    filter_horizontal = ("genres", "languages")

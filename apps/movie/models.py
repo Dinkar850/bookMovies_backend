@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils import text
+from django.utils.text import slugify
 
 from apps.core import models as CoreModels
 
@@ -17,9 +17,7 @@ class Movie(CoreModels.TimeStampedModel):
     - **language**: foreign key reference to language (many-to-many)
     """
 
-    name = models.CharField(
-        max_length=250, unique=True, help_text="Maximum 250 characters are allowed"
-    )
+    name = models.CharField(max_length=250, unique=True)
     description = models.TextField(blank=True)
     duration = models.DurationField()
     release_date = models.DateField()
@@ -27,7 +25,7 @@ class Movie(CoreModels.TimeStampedModel):
         upload_to="movie_covers/",
         blank=True,
         null=True,
-        help_text="Upload the movie's poster if exists",
+        help_text="Optional movie's poster shown to users",
     )
     slug = models.SlugField(
         unique=True,
@@ -35,18 +33,25 @@ class Movie(CoreModels.TimeStampedModel):
         db_index=True,
         editable=False,
     )
-    genre = models.ManyToManyField(CoreModels.Genre, related_name="movies")
-    language = models.ManyToManyField(CoreModels.Language, related_name="movies")
+    genres = models.ManyToManyField(CoreModels.Genre, related_name="movies")
+    languages = models.ManyToManyField(CoreModels.Language, related_name="movies")
 
     def save(self, *args, **kwargs):
-        """Adds slug for movie based on movie's name. Gets called on each instance creation / updation"""
-        if not self.slug:
-            self.slug = text.slugify(self.name)
-        super().save(*args, **kwargs)
+        """Auto-generates a unique slug from movie name with collision handling"""
 
-    def get_absolute_url(self):
-        """Returns canonical url for each movie's resource"""
-        return f"/movies/{self.slug}"
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            count = 1
+
+            # Keep incrementing and attaching counter till a movie exists for that slug to avoid collision
+            while Movie.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{count}"
+                count += 1
+
+            self.slug = slug
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

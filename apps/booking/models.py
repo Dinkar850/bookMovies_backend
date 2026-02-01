@@ -36,7 +36,7 @@ class Booking(CoreModels.TimeStampedModel):
     user = models.ForeignKey(
         UserModels.User, on_delete=models.CASCADE, related_name="bookings"
     )
-    seat = models.ManyToManyField(CinemaModels.Seat, related_name="bookings")
+    seats = models.ManyToManyField(CinemaModels.Seat, related_name="bookings")
 
     def __str__(self):
-        return f"{self.status}:{self.user}-{self.slot}"
+        return f"Booking #{self.id} ({self.status})"

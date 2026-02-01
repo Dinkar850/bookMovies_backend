@@ -6,10 +6,10 @@ from apps.core import models as CoreModels
 
 from .managers import UserManager
 
-# Validates that phone number has exactly 10 digits and none are characters other than digits
+# Validates that phone number has exactly 10 digits and does not start with 0
 phone_validator = RegexValidator(
     regex=r"^[1-9]\d{9}$",
-    message="Phone number must be exactly 10 digits and cannot start with 0.",
+    message="Phone number must be exactly 10 digits and cannot start with 0",
 )
 
 
@@ -23,30 +23,21 @@ class User(
     Initialises a custom user model for email based login
 
     Contains:
+    - **is_staff**: enables user login in admin panel
     - **email**: user's email address and acts as the unique identifier
     - **first_name**: user's first name
-    - **last_name**: user's last name (is optional)
+    - **last_name**: user's last name ( optional)
     - **phone_number**: user's 10 digit phone number, unique
     - **profile_image**: user's profile image(optional)
-    - **is_active**: mimics default user's is active state of user
-    - **is_staff**: enables user login in admin panel
     - **required_fields**: `first_name`, `phone_number`, `email` and `password`
     - Permisions from PermissionsMixin contains `is_superuser`, `has_perm`, `group` permissions
     - Custom user manager: `UserManager`
     """
 
     is_staff = models.BooleanField(default=False)
-    email = models.EmailField(
-        max_length=255, unique=True, help_text="Maximum 255 characters are allowed"
-    )
-    first_name = models.CharField(
-        max_length=70, help_text="Maximum 70 characters are allowed"
-    )
-    last_name = models.CharField(
-        max_length=70,
-        blank=True,
-        help_text="Maximum 70 characters are allowed, can be left blank",
-    )
+    email = models.EmailField(max_length=255, unique=True)
+    first_name = models.CharField(max_length=70)
+    last_name = models.CharField(max_length=70, blank=True)
     phone_number = models.CharField(
         max_length=10,
         unique=True,
@@ -58,7 +49,7 @@ class User(
     )
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "phone_number"]
+    REQUIRED_FIELDS = ("first_name", "phone_number")
 
     objects = UserManager()
 

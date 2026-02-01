@@ -33,9 +33,7 @@ class Language(TimeStampedModel):
     - **name**: name of the language
     """
 
-    name = models.CharField(
-        max_length=50, unique=True, help_text="Maximum 50 characters are allowed"
-    )
+    name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
@@ -48,9 +46,7 @@ class City(TimeStampedModel):
     - **name**: name of the city
     """
 
-    name = models.CharField(
-        max_length=50, unique=True, help_text="Maximum 50 characters are allowed"
-    )
+    name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
@@ -63,9 +59,7 @@ class Genre(TimeStampedModel):
     - **name**: name of the genre
     """
 
-    name = models.CharField(
-        max_length=50, unique=True, help_text="Maximum 50 characters are allowed"
-    )
+    name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name

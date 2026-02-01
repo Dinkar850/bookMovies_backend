@@ -1,4 +1,4 @@
-from django.core import exceptions, validators
+from django.core import validators
 from django.db import models, transaction
 
 from apps.core import models as CoreModels
@@ -15,12 +15,10 @@ class Cinema(CoreModels.TimeStampedModel):
     - **city**: foreign key to external City relation (many-to-one)
     """
 
-    name = models.CharField(
-        max_length=250, help_text="Maximum 250 characters are allowed"
-    )
+    name = models.CharField(max_length=250)
     rows = models.PositiveIntegerField(
         validators=[validators.MinValueValidator(5)],
-        help_text="Specify total rows of seats in the cinema, minimum 5 are required",
+        help_text="Total rows of seats in the cinema, minimum 5 are required",
     )
     seats_per_row = models.PositiveIntegerField(
         validators=[validators.MinValueValidator(5)],
@@ -34,16 +32,20 @@ class Cinema(CoreModels.TimeStampedModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "address", "city"],
+                fields=("name", "address", "city"),
                 name="unique_cinema_per_address_city",
             )
         ]
 
     def __str__(self):
-        return f"{self.name}, {self.address}, {self.city}"
+        return f"{self.name}, {self.address}"
 
     def save(self, *args, **kwargs):
-        """Creates or updates cinema, if cinema is created, also creates the new seats for that cinema"""
+        """
+        Creates or updates cinema.
+        - If new cinema is created, also creates the new seats for that cinema based on `seats_per_row` and `rows`
+        - If `seats_per_row` or `rows` is updated for an existing cinema, also updates its seats
+        """
 
         is_unique = self.pk is None
 
@@ -56,7 +58,7 @@ class Cinema(CoreModels.TimeStampedModel):
                 self._update_seats()
 
     def _create_seats(self):
-        """Creates seats for new cinema being created"""
+        """Creates seats for a newly created cinema"""
 
         seats = [
             Seat(seat_row=row + 1, seat_number=number + 1, cinema=self)
@@ -68,7 +70,7 @@ class Cinema(CoreModels.TimeStampedModel):
 
     def _update_seats(self):
         """
-        Updates seats with the following criterias:
+        Updates seats on change in `seats_per_row` or `rows` with the following criterias:
         - Activate seats if they already exist and required in updated `rows`, `seats_per_row`
         - Deactivate seats if `rows` or `seats_per_row` is decreased
         - Create new seats if `rows` or `seats_per_row` is increased
@@ -107,7 +109,7 @@ class Cinema(CoreModels.TimeStampedModel):
                 seat.is_active = False
                 to_deactivate.append(seat)
 
-        # Bulk create status of required seats
+        # Bulk create required seats
         if to_create:
             Seat.objects.bulk_create(to_create)
 
@@ -126,42 +128,21 @@ class Seat(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
 
     seat_row = models.PositiveIntegerField(
         validators=[validators.MinValueValidator(1)],
-        help_text="Specify row of the seat (1-indexed)",
+        help_text="Row of the seat (1-indexed)",
     )
     seat_number = models.PositiveIntegerField(
         validators=[validators.MinValueValidator(1)],
-        help_text="Specify position of the seat in the row (1-indexed)",
+        help_text="Position of the seat in the row (1-indexed)",
     )
     cinema = models.ForeignKey(Cinema, on_delete=models.CASCADE, related_name="seats")
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["seat_row", "seat_number", "cinema"],
+                fields=("seat_row", "seat_number", "cinema"),
                 name="unique_seat_per_cinema",
             )
         ]
 
-    def clean(self):
-        """
-        Raises exception in admin panel only, if:
-        - entered seat row is not in defined range
-        - entered seat number is not in defined range
-        """
-
-        super().clean()
-
-        # Checks if entered seat row is greater than rows for the linked cinema
-        if self.seat_row > self.cinema.rows:
-            raise exceptions.ValidationError(
-                f"Row must be between 1 and {self.cinema.rows}"
-            )
-
-        # Checks if entered seat number is greater than seats for the linked cinema
-        if self.seat_number > self.cinema.seats_per_row:
-            raise exceptions.ValidationError(
-                f"Seat number must be between 1 and {self.cinema.seats_per_row}"
-            )
-
     def __str__(self):
-        return f"{self.seat_row},{self.seat_number}-{self.cinema}"
+        return f"Row:{self.seat_row}, Number:{self.seat_number}"
