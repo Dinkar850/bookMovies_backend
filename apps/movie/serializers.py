@@ -17,14 +17,14 @@ class MovieListSerializer(MovieNameSerializer):
     - returns genre and language as strings (defined in def(__str__))
     """
 
-    genre = serializers.StringRelatedField(many=True, read_only=True)
-    language = serializers.StringRelatedField(many=True, read_only=True)
+    genres = serializers.StringRelatedField(many=True, read_only=True)
+    languages = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta(MovieNameSerializer.Meta):
         fields = MovieNameSerializer.Meta.fields + [
             "slug",
-            "genre",
-            "language",
+            "genres",
+            "languages",
             "cover_image",
             "release_date",
         ]

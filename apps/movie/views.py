@@ -19,7 +19,7 @@ class MovieBaseMixin:
         return (
             Movie.objects.filter(slots__is_active=True, slots__schedule__gte=now)
             .distinct()
-            .prefetch_related("genre", "language")
+            .prefetch_related("genres", "languages")
         )
 
 
