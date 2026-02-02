@@ -13,7 +13,7 @@ class CinemaListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cinema
-        fields = ["id", "name", "address", "city"]
+        fields = ("id", "name", "address", "city")
 
 
 class CinemaDetailsSerializer(CinemaListSerializer):
@@ -24,7 +24,7 @@ class CinemaDetailsSerializer(CinemaListSerializer):
     """
 
     class Meta(CinemaListSerializer.Meta):
-        fields = CinemaListSerializer.Meta.fields + ["rows", "seats_per_row"]
+        fields = CinemaListSerializer.Meta.fields + ("rows", "seats_per_row")
 
 
 class SeatSerializer(serializers.ModelSerializer):
@@ -32,4 +32,4 @@ class SeatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Seat
-        fields = ["id", "seat_row", "seat_number"]
+        fields = ("id", "seat_row", "seat_number")
