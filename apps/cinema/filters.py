@@ -1,6 +1,6 @@
 import django_filters
 
-from apps.core.filters import CharInFilter
+from apps.core.filters import NumberInFilter
 
 from .models import Cinema
 
@@ -8,10 +8,10 @@ from .models import Cinema
 class CinemaFilter(django_filters.FilterSet):
     """
     Filter set for cinema list view which contains:
-    - **city**: filter based on multiple cities
+    - **city_id**: multiple comma separated city IDs(integers)
     """
 
-    city = CharInFilter(field_name="city__name", lookup_expr="in", distinct=True)
+    city_id = NumberInFilter(field_name="city__id", lookup_expr="in", distinct=True)
 
     class Meta:
         model = Cinema
