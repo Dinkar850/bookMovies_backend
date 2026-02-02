@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "corsheaders",
     "rest_framework",
+    "drf_spectacular",
     "apps.core",
     "apps.user",
     "apps.movie",
@@ -63,7 +64,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
-    )
+    ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Settings for jwt tokens
@@ -132,6 +134,14 @@ INTERNAL_IPS = [
     "127.0.0.1",
     "localhost",
 ]
+
+# drf-spectacular meta data
+SPECTACULAR_SETTINGS = {
+    "TITLE": "bookMovies API",
+    "DESCRIPTION": "API documentation for movie ticket booking backend",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 WSGI_APPLICATION = "config.wsgi.application"
 
