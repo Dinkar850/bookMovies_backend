@@ -1,6 +1,6 @@
 import django_filters
 
-from apps.core.filters import CharInFilter, NumberInFilter
+from apps.core.filters import NumberInFilter
 
 from .models import Movie
 
@@ -8,15 +8,15 @@ from .models import Movie
 class MovieFilter(django_filters.FilterSet):
     """
     Filter set for movie list view which contains:
-    - **genre**: multiple strings and comma separated
-    - **language**: multiple strings and comma separated
-    - **cinema_id**: multiple ids(numbers) and comma separated
+    - **genre_id**: multiple IDs(integers) and comma separated
+    - **language_id**: multiple IDs(integers) and comma separated
+    - **cinema_id**: multiple IDs(integers) and comma separated
     - **release_date**: greater than or equal to entered date
     """
 
-    genre = CharInFilter(field_name="genre__name", lookup_expr="in", distinct=True)
-    language = CharInFilter(
-        field_name="language__name", lookup_expr="in", distinct=True
+    genre_id = NumberInFilter(field_name="genre__id", lookup_expr="in", distinct=True)
+    language_id = NumberInFilter(
+        field_name="language__id", lookup_expr="in", distinct=True
     )
     cinema_id = NumberInFilter(
         field_name="slots__cinema_id", lookup_expr="in", distinct=True
@@ -27,4 +27,4 @@ class MovieFilter(django_filters.FilterSet):
 
     class Meta:
         model = Movie
-        fields = ["genre", "language", "cinema_id", "release_date"]
+        fields = ["genre_id", "language_id", "cinema_id", "release_date"]
