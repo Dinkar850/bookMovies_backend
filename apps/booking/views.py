@@ -12,6 +12,7 @@ from rest_framework import (
 
 from apps.core import pagination as CorePagination
 
+from .constants import BookingErrors, BookingMessages
 from .filters import BookingFilter
 from .models import Booking
 from .serializers import (
@@ -41,7 +42,7 @@ class BookingViewSet(
                 "slot__cinema__city",
                 "slot__language",
             )
-            .prefetch_related("seat")
+            .prefetch_related("seats")
         )
 
     def get_serializer_class(self):
@@ -60,7 +61,7 @@ class BookingViewSet(
             booking, context=self.get_serializer_context()
         )
         return response.Response(
-            {"detail": "Booking created successfully", **res_serializer.data},
+            {"detail": BookingMessages.CREATED, **res_serializer.data},
             status=status.HTTP_201_CREATED,
         )
 
@@ -73,18 +74,16 @@ class BookingViewSet(
         # Checks if booking was already cancelled
         if booking.status == Booking.BookingStatus.CANCELLED:
             raise exceptions.ValidationError(
-                {"detail": "Requested booking is already cancelled."}
+                {"detail": BookingErrors.ALREADY_CANCELLED}
             )
 
         # Checks if booking belongs to an expired slot
         if booking.slot.schedule <= timezone.now():
-            raise exceptions.ValidationError(
-                {"detail": "Cannot cancel a booking after its slot has expired."}
-            )
+            raise exceptions.ValidationError({"detail": BookingErrors.EXPIRED_SLOT})
 
         booking.status = Booking.BookingStatus.CANCELLED
-        booking.save(update_fields=["status", "updated_at"])
+        booking.save(update_fields=("status", "updated_at"))
 
         return response.Response(
-            {"detail": "Booking cancelled successfully"}, status=status.HTTP_200_OK
+            {"detail": BookingMessages.CANCELLED}, status=status.HTTP_200_OK
         )

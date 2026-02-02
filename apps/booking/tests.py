@@ -17,8 +17,6 @@ class BookingBaseTest(TestCase):
     def setUpTestData(cls):
         cls.now = timezone.now()
 
-        cls.client = APIClient()
-
         cls.user = User.objects.create_user(
             email="test@test.com",
             password="pass12345",
@@ -56,6 +54,9 @@ class BookingBaseTest(TestCase):
 
         cls.seats = list(cls.cinema.seats.filter(is_active=True)[:3])
 
+    def setUp(self):
+        self.client = APIClient()
+
     def login(self):
         self.client.force_authenticate(self.user)
 
@@ -64,6 +65,7 @@ class TestBookingCreate(BookingBaseTest):
     # Booking Creation
 
     def setUp(self):
+        super().setUp()
         self.login()
 
     def test_create_success(self):
@@ -132,6 +134,7 @@ class TestBookingList(BookingBaseTest):
     # Booking List View
 
     def setUp(self):
+        super().setUp()
         self.login()
 
         self.booking = Booking.objects.create(
@@ -169,6 +172,7 @@ class TestBookingCancel(BookingBaseTest):
     # Booking cancellation
 
     def setUp(self):
+        super().setUp()
         self.login()
 
         self.booking = Booking.objects.create(
