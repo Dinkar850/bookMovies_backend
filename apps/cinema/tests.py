@@ -143,7 +143,7 @@ class TestCinemaViews(TestCase):
     # Detail view
 
     def test_detail_success(self):
-        res = self.client.get(f"/api/cinemas/{self.cinema_active.id}")
+        res = self.client.get(f"/api/cinemas/{self.cinema_active.id}/")
 
         self.assertEqual(res.status_code, 200)
 
@@ -151,11 +151,11 @@ class TestCinemaViews(TestCase):
         self.assertIn("seats_per_row", res.data)
 
     def test_detail_not_found_if_no_active_slot(self):
-        res = self.client.get(f"/api/cinemas/{self.cinema_inactive.id}")
+        res = self.client.get(f"/api/cinemas/{self.cinema_inactive.id}/")
 
         self.assertEqual(res.status_code, 404)
 
     def test_detail_invalid_id(self):
-        res = self.client.get("/api/cinemas/999")
+        res = self.client.get("/api/cinemas/999/")
 
         self.assertEqual(res.status_code, 404)

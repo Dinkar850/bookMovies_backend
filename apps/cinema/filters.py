@@ -15,4 +15,4 @@ class CinemaFilter(django_filters.FilterSet):
 
     class Meta:
         model = Cinema
-        fields = ["city"]
+        fields = ("city",)
