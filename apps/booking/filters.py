@@ -1,7 +1,7 @@
 import django_filters
 from django.utils import timezone
 
-from apps.core import filters as CoreFilters
+from apps.core.filters import NumberInFilter
 
 from .models import Booking
 
@@ -15,8 +15,8 @@ class BookingFilter(django_filters.FilterSet):
     - **movie_id**: multiple comma separated movie id's
     - **cinema_id**: multiple comma separated cinema id's
     - **slot_id**: multiple comma separated slot id's
-    - **city**: multiple comma separated city names
-    - **language**: multiple comma separated language names
+    - **city_id**: multiple comma separated city id's
+    - **language_id**: multiple comma separated language id's
     """
 
     booking_status = django_filters.ChoiceFilter(
@@ -31,20 +31,16 @@ class BookingFilter(django_filters.FilterSet):
     booking_date = django_filters.DateTimeFilter(
         field_name="slot__schedule", lookup_expr="date"
     )
-    cinema_id = CoreFilters.NumberInFilter(
+    cinema_id = NumberInFilter(
         field_name="slot__cinema", lookup_expr="in", distinct=True
     )
-    movie_id = CoreFilters.NumberInFilter(
-        field_name="slot__movie", lookup_expr="in", distinct=True
+    movie_id = NumberInFilter(field_name="slot__movie", lookup_expr="in", distinct=True)
+    slot_id = NumberInFilter(field_name="slot", lookup_expr="in", distinct=True)
+    city_id = NumberInFilter(
+        field_name="slot__cinema__city", lookup_expr="in", distinct=True
     )
-    slot_id = CoreFilters.NumberInFilter(
-        field_name="slot", lookup_expr="in", distinct=True
-    )
-    city = CoreFilters.CharInFilter(
-        field_name="slot__cinema__city__name", lookup_expr="in", distinct=True
-    )
-    language = CoreFilters.CharInFilter(
-        field_name="slot__language__name", lookup_expr="in", distinct=True
+    language_id = NumberInFilter(
+        field_name="slot__language", lookup_expr="in", distinct=True
     )
 
     class Meta:
@@ -56,8 +52,8 @@ class BookingFilter(django_filters.FilterSet):
             "cinema_id",
             "movie_id",
             "slot_id",
-            "city",
-            "language",
+            "city_id",
+            "language_id",
         ]
 
     def filter_status(self, qs, name, value):
