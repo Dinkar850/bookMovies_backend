@@ -20,7 +20,7 @@ class SlotListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Slot
-        fields = ["id", "schedule", "price", "language", "movie", "cinema"]
+        fields = ("id", "schedule", "price", "language", "movie", "cinema")
 
 
 class SlotDetailsSerializer(SlotListSerializer):
@@ -39,4 +39,4 @@ class SlotDetailsSerializer(SlotListSerializer):
     )
 
     class Meta(SlotListSerializer.Meta):
-        fields = SlotListSerializer.Meta.fields + ["booked_seats", "active_seats"]
+        fields = SlotListSerializer.Meta.fields + ("booked_seats", "active_seats")
