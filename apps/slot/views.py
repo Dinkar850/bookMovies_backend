@@ -57,10 +57,10 @@ class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
         """Populates `active_seats` and `booked_seats` attribute for `confirmed_bookings` by using a custom queryset"""
 
         # queryset for fetching and ordering all seats
-        cinema_seats = CinemaModels.Seat.objects.order_by("seat_row", "seat_number")
+        cinema_seats = CinemaModels.Seat.objects.order_by("id")
 
         # queryset for filtering confirmed bookings and then fetching only active seats for each booking
-        confirmed_bookings_qs = BookingModels.Booking.objects.filter(
+        confirmed_bookings_queryset = BookingModels.Booking.objects.filter(
             status=BookingModels.Booking.BookingStatus.BOOKED
         ).prefetch_related(
             Prefetch(
@@ -74,7 +74,7 @@ class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
             # prefetch responsible for populating confirmed_bookings attribute in slot object with booked status and also populating the booked_seats attribute for each confirmed_booking
             Prefetch(
                 "bookings",
-                queryset=confirmed_bookings_qs,
+                queryset=confirmed_bookings_queryset,
                 to_attr="confirmed_bookings",
             ),
             # prefetch responsible for populating active_seats attribute in slot object for that cinema
@@ -90,8 +90,14 @@ class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
 
         slot = super().get_object()
 
-        slot.booked_seats = [
-            seat for booking in slot.confirmed_bookings for seat in booking.booked_seats
-        ]
+        # Sorts slots based on seat id for `booked_seats`
+        slot.booked_seats = sorted(
+            [
+                seat
+                for booking in slot.confirmed_bookings
+                for seat in booking.booked_seats
+            ],
+            key=lambda seat: seat.id,
+        )
 
         return slot

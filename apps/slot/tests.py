@@ -146,34 +146,33 @@ class TestSlotAPI(SlotBaseTest):
         res = self.client.get("/api/slots/")
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(len(res.data["results"]), 1)
+        self.assertEqual(len(res.data), 1)
 
     def test_filter_by_language(self):
-        res = self.client.get("/api/slots/?language=English")
-
-        self.assertEqual(len(res.data["results"]), 1)
+        res = self.client.get(f"/api/slots/?language={self.language.id}")
+        self.assertEqual(len(res.data), 1)
 
     def test_filter_by_city(self):
-        res = self.client.get("/api/slots/?city=Kanpur")
+        res = self.client.get(f"/api/slots/?city={self.city.id}")
 
-        self.assertEqual(len(res.data["results"]), 1)
+        self.assertEqual(len(res.data), 1)
 
-    def test_filter_by_cinema_id(self):
+    def test_filter_by_cinema(self):
         res = self.client.get(f"/api/slots/?cinema_id={self.cinema.id}")
 
-        self.assertEqual(len(res.data["results"]), 1)
+        self.assertEqual(len(res.data), 1)
 
-    def test_filter_by_movie_id(self):
+    def test_filter_by_movie(self):
         res = self.client.get(f"/api/slots/?movie_id={self.movie.id}")
 
-        self.assertEqual(len(res.data["results"]), 1)
+        self.assertEqual(len(res.data), 1)
 
     def test_filter_by_date(self):
         date = self.slot.schedule.date()
 
         res = self.client.get(f"/api/slots/?date={date}")
 
-        self.assertEqual(len(res.data["results"]), 1)
+        self.assertEqual(len(res.data), 1)
 
     # Detail View
 
