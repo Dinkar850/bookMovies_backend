@@ -33,7 +33,7 @@ class MovieListView(MovieBaseMixin, CoreViews.ListView):
 
     serializer_class = MovieListSerializer
     filterset_class = MovieFilter
-    search_fields = ["name"]
+    search_fields = ("name",)
 
     def get_queryset(self):
         return self.base_queryset()

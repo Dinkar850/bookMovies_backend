@@ -8,7 +8,7 @@ class MovieNameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Movie
-        fields = ["id", "name"]
+        fields = ("id", "name")
 
 
 class MovieListSerializer(MovieNameSerializer):
@@ -21,13 +21,13 @@ class MovieListSerializer(MovieNameSerializer):
     languages = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta(MovieNameSerializer.Meta):
-        fields = MovieNameSerializer.Meta.fields + [
+        fields = MovieNameSerializer.Meta.fields + (
             "slug",
             "genres",
             "languages",
             "cover_image",
             "release_date",
-        ]
+        )
 
 
 class MovieDetailsSerializer(MovieListSerializer):
@@ -38,4 +38,4 @@ class MovieDetailsSerializer(MovieListSerializer):
     """
 
     class Meta(MovieListSerializer.Meta):
-        fields = MovieListSerializer.Meta.fields + ["description"]
+        fields = MovieListSerializer.Meta.fields + ("description",)

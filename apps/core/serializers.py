@@ -8,7 +8,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ["id", "name"]
+        fields = ("id", "name")
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -16,7 +16,7 @@ class LanguageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Language
-        fields = ["id", "name"]
+        fields = ("id", "name")
 
 
 class CitySerializer(serializers.ModelSerializer):
@@ -24,4 +24,4 @@ class CitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = City
-        fields = ["id", "name"]
+        fields = ("id", "name")
