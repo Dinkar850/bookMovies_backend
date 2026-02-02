@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_protect
 from rest_framework import generics, permissions, response, status
 from rest_framework_simplejwt import tokens, views
 
+from .constants import UserErrors, UserMessages
 from .serializers import TokenObtainPairSerializer, UserSerializer, UserUpdateSerializer
 
 
@@ -57,7 +58,10 @@ class RegisterView(generics.CreateAPIView):
         refresh = tokens.RefreshToken.for_user(user)
         access = str(refresh.access_token)
 
-        res = response.Response({"access": access}, status=status.HTTP_201_CREATED)
+        res = response.Response(
+            {"detail": UserMessages.REGISTERED, "access": access},
+            status=status.HTTP_201_CREATED,
+        )
 
         set_refresh_cookie(res, str(refresh))
         return res
@@ -84,7 +88,10 @@ class LoginView(views.TokenObtainPairView):
         if not refresh or not access:
             return res
 
-        res = response.Response({"access": access}, status=status.HTTP_200_OK)
+        res = response.Response(
+            {"detail": UserMessages.LOGGED_IN, "access": access},
+            status=status.HTTP_200_OK,
+        )
         set_refresh_cookie(res, refresh)
         return res
 
@@ -135,7 +142,7 @@ class TokenRefreshView(views.TokenRefreshView):
 
         if not refresh:
             return response.Response(
-                {"detail": "Missing or invalid refresh token"},
+                {"detail": UserErrors.INVALID_REFRESH_TOKEN},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
