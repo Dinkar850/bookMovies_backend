@@ -7,7 +7,7 @@ from apps.cinema.models import Seat
 from apps.slot.models import Slot
 from apps.slot.serializers import SlotListSerializer
 
-from .constants import MAX_SEATS_PER_BOOKING
+from .constants import BookingDefaults, BookingErrors
 from .models import Booking
 
 
@@ -20,51 +20,41 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
     # Validation: Existence of seat in cinema and that it is active
     seats = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=Seat.objects.filter(is_active=True).select_related("cinema__city"),
-        source="seat",
+        queryset=Seat.objects.filter(is_active=True),
     )
 
     # Validation: Existence of an active slot beyond current date and time
     slot = serializers.PrimaryKeyRelatedField(
-        queryset=Slot.objects.filter(
-            is_active=True, schedule__gte=timezone.now()
-        ).select_related("cinema__city", "movie")
+        queryset=Slot.objects.filter(is_active=True, schedule__gte=timezone.now())
     )
 
     class Meta:
         model = Booking
-        fields = ["slot", "seats"]
+        fields = ("slot", "seats")
 
     def validate(self, attrs):
         slot = attrs["slot"]
-        seats = attrs["seat"]
+        seats = attrs["seats"]
         cinema = slot.cinema
         seat_ids = [seat.id for seat in seats]
 
         # Validation: Duplicate seats are not passed
-        if len(seat_ids) < len(set(seat_ids)):
-            raise serializers.ValidationError(
-                {"seats": "Duplicate seat(s) found in request"}
-            )
+        if len(set(seat_ids)) < len(seat_ids):
+            raise serializers.ValidationError({"seats": BookingErrors.DUPLICATE_SEATS})
 
         # Validation: Maximum MAX_SEATS_PER_BOOKING seats can be booked per booking
-        if len(seats) > MAX_SEATS_PER_BOOKING:
+        if len(seats) > BookingDefaults.MAX_SEATS_PER_BOOKING:
             raise serializers.ValidationError(
-                {
-                    "seats": f"More than {MAX_SEATS_PER_BOOKING} seats cannot be booked per booking"
-                }
+                {"seats": BookingErrors.EXCEEDED_SEATS_LIMIT}
             )
 
         # Validation: Entered seat does not belong to the cinema of the slot
 
         invalid_seat_ids = [seat.id for seat in seats if seat.cinema_id != cinema.id]
-        # list.sort(invalid_seat_ids)
 
         if invalid_seat_ids:
             raise serializers.ValidationError(
-                {
-                    "seats": f"Some or all seats do not belong to the selected slot's cinema: {invalid_seat_ids}"
-                }
+                {"seats": f"{BookingErrors.INVALID_CINEMA}: {invalid_seat_ids}"}
             )
 
         # Validation: Entered seat is already booked for the slot
@@ -82,7 +72,7 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
         if already_booked_seat_ids:
             raise serializers.ValidationError(
                 {
-                    "seats": f"Some or all seats are already booked for this slot: {already_booked_seat_ids}"
+                    "seats": f"{BookingErrors.SEATS_ALREADY_BOOKED}: {already_booked_seat_ids}"
                 }
             )
 
@@ -90,7 +80,7 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         slot = validated_data["slot"]
-        seats = validated_data["seat"]
+        seats = validated_data["seats"]
 
         user = self.context["request"].user
 
@@ -102,7 +92,7 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
                 status=Booking.BookingStatus.BOOKED,
             )
 
-            booking.seat.set(seats)
+            booking.seats.set(seats)
 
         return booking
 
@@ -110,23 +100,23 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
 class BookingCreateResponseSerializer(serializers.ModelSerializer):
     """Serializer to be used for returning `seats`, `seat_count` and `total_price` for the current booking"""
 
-    seats = CinemaSerializers.SeatSerializer(many=True, read_only=True, source="seat")
-    seat_count = serializers.IntegerField(source="seat.count", read_only=True)
+    seats = CinemaSerializers.SeatSerializer(many=True, read_only=True)
+    seat_count = serializers.IntegerField(source="seats.count", read_only=True)
     total_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
-        fields = [
+        fields = (
             "id",
             "created_at",
             "status",
             "total_price",
             "seat_count",
             "seats",
-        ]
+        )
 
     def get_total_price(self, obj):
-        return obj.seat.count() * obj.slot.price
+        return obj.seats.count() * obj.slot.price
 
 
 class BookingListSerializer(BookingCreateResponseSerializer):
@@ -137,4 +127,4 @@ class BookingListSerializer(BookingCreateResponseSerializer):
     slot = SlotListSerializer(read_only=True)
 
     class Meta(BookingCreateResponseSerializer.Meta):
-        fields = BookingCreateResponseSerializer.Meta.fields + ["slot"]
+        fields = BookingCreateResponseSerializer.Meta.fields + ("slot",)
