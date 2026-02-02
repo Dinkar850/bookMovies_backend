@@ -14,9 +14,9 @@ class MovieFilter(django_filters.FilterSet):
     - **release_date**: greater than or equal to entered date
     """
 
-    genre_id = NumberInFilter(field_name="genre__id", lookup_expr="in", distinct=True)
+    genre_id = NumberInFilter(field_name="genres__id", lookup_expr="in", distinct=True)
     language_id = NumberInFilter(
-        field_name="language__id", lookup_expr="in", distinct=True
+        field_name="languages__id", lookup_expr="in", distinct=True
     )
     cinema_id = NumberInFilter(
         field_name="slots__cinema_id", lookup_expr="in", distinct=True
@@ -27,4 +27,4 @@ class MovieFilter(django_filters.FilterSet):
 
     class Meta:
         model = Movie
-        fields = ["genre_id", "language_id", "cinema_id", "release_date"]
+        fields = ("genre_id", "language_id", "cinema_id", "release_date")

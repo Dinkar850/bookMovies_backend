@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.cinema.models import Cinema
-from apps.core.models import Genre, Language
+from apps.core.models import City, Genre, Language
 from apps.movie.models import Movie
 from apps.slot.models import Slot
 
@@ -15,12 +15,13 @@ class TestMovieViews(TestCase):
     def setUpTestData(cls):
         cls.genre = Genre.objects.create(name="Action")
         cls.language = Language.objects.create(name="English")
+        cls.city = City.objects.create(name="Kanpur")
 
         cls.cinema = Cinema.objects.create(
             name="INOX",
             address="Z Square",
-            city_id=1,
             rows=5,
+            city=cls.city,
             seats_per_row=5,
         )
 
@@ -82,8 +83,8 @@ class TestMovieViews(TestCase):
         self.assertIn("id", movie)
         self.assertIn("name", movie)
         self.assertIn("slug", movie)
-        self.assertIn("genre", movie)
-        self.assertIn("language", movie)
+        self.assertIn("genres", movie)
+        self.assertIn("languages", movie)
         self.assertIn("release_date", movie)
 
     # Searching
