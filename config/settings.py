@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "debug_toolbar",
     "apps.core",
     "apps.user",
     "apps.movie",
@@ -51,20 +50,29 @@ INSTALLED_APPS = [
     "apps.booking",
 ]
 
+if DEBUG:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+    ]
+
 # Sets custom user model
 AUTH_USER_MODEL = "user.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "config.middleware.QueriesAnalysisMiddleware",
 ]
+
+if DEBUG:
+    MIDDLEWARE += [
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+        "config.middleware.QueriesAnalysisMiddleware",
+    ]
 
 ROOT_URLCONF = "config.urls"
 

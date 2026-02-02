@@ -13,7 +13,7 @@ class Booking(CoreModels.TimeStampedModel):
     - **status**: status of booking, booked(B), cancelled(C) or pending(P)
     - **slot**: foreign key relation with Slot table (many-to-one)
     - **user**: foreign key relation with User table (many-to-one)
-    - **seat**: foreign key relation with Seat table (many-to-many)
+    - **seats**: foreign key relation with Seat table (many-to-many)
     """
 
     class BookingStatus(models.TextChoices):

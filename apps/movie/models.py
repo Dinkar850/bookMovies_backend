@@ -13,8 +13,8 @@ class Movie(CoreModels.TimeStampedModel):
     - **duration**: duration of the movie
     - **release_date**: release date of the movie
     - **cover_image**: cover image of the movie
-    - **genre**: foreign key reference to genre (many-to-many)
-    - **language**: foreign key reference to language (many-to-many)
+    - **genres**: foreign key reference to genre (many-to-many)
+    - **languages**: foreign key reference to language (many-to-many)
     """
 
     name = models.CharField(max_length=250, unique=True)
@@ -29,7 +29,6 @@ class Movie(CoreModels.TimeStampedModel):
     )
     slug = models.SlugField(
         unique=True,
-        max_length=250,
         db_index=True,
         editable=False,
     )

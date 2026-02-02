@@ -82,7 +82,7 @@ class Slot(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
             )
 
         # Checks if slot is being created for a language other than its movie's languages
-        if not self.movie.language.filter(pk=self.language_id).exists():
+        if not self.movie.languages.filter(pk=self.language_id).exists():
             raise ValidationError(SlotErrors.INVALID_LANGUAGE)
 
         previous_slot = (
