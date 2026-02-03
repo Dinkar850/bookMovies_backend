@@ -1,30 +1,23 @@
 from django.utils import timezone
-from rest_framework import generics
 
-from apps.core import views as CoreViews
+from apps.core.viewsets import ReadOnlyModelViewset
 
 from .filters import CinemaFilter
 from .models import Cinema
 from .serializers import CinemaDetailsSerializer, CinemaListSerializer
 
 
-class CinemaBaseMixin:
-    """Sets base queryset to be used by all views"""
-
-    def base_queryset(self):
-        """Generates a queryset for retrieving cinema entries having at least one active slot"""
-
-        now = timezone.now()
-
-        return (
-            Cinema.objects.filter(slots__is_active=True, slots__schedule__gte=now)
-            .distinct()
-            .select_related("city")
-        )
-
-
-class CinemaListView(CinemaBaseMixin, CoreViews.ListView):
+class CinemaViewset(ReadOnlyModelViewset):
     """
+    Endpoint for browsing cinemas
+
+    Permissions:
+        - AllowAny
+
+    Allowed Methods:
+        GET
+
+    LIST
     GET /api/cinemas/
 
     Description:
@@ -39,7 +32,9 @@ class CinemaListView(CinemaBaseMixin, CoreViews.ListView):
 
     Response:
         200 OK
-        [
+        "next": null,
+        "previous": null,
+        "results": [
             {
                 "id": int,
                 "name": string,
@@ -47,20 +42,8 @@ class CinemaListView(CinemaBaseMixin, CoreViews.ListView):
                 "city": string
             }
         ]
-    """
 
-    serializer_class = CinemaListSerializer
-    filterset_class = CinemaFilter
-    search_fields = ("name",)
-
-    def get_queryset(self):
-        """Generates queryset from base mixin to be used by this view"""
-
-        return self.base_queryset()
-
-
-class CinemaDetailsView(CinemaBaseMixin, generics.RetrieveAPIView):
-    """
+    RETRIEVE
     GET /api/cinemas/{id}/
 
     Description:
@@ -83,9 +66,30 @@ class CinemaDetailsView(CinemaBaseMixin, generics.RetrieveAPIView):
             - Cinema not found
     """
 
-    serializer_class = CinemaDetailsSerializer
+    filterset_class = CinemaFilter
 
     def get_queryset(self):
-        """Generates queryset from base mixin to be used by this view"""
+        """
+        - Sets now to current date and time
+        - Generates a queryset for retrieving movie entries having at least one active slot
+        """
 
-        return self.base_queryset()
+        now = timezone.now()
+
+        return (
+            Cinema.objects.filter(slots__is_active=True, slots__schedule__gte=now)
+            .distinct()
+            .select_related("city")
+        )
+
+    def get_serializer_class(self):
+        """
+        Sets serializer with the following conditions:
+        - Uses `CinemaListSerializer` when action is `list()`
+        - Otherwise uses `CinemaDetailsSerializer`
+        """
+
+        if self.action == "list":
+            return CinemaListSerializer
+
+        return CinemaDetailsSerializer
