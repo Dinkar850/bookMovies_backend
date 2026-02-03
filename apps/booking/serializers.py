@@ -13,14 +13,27 @@ from .models import Booking
 
 class BookingCreateRequestSerializer(serializers.ModelSerializer):
     """
-    Serializer for booking creation that has:
-    - Structure of request: {slot:integer, seats: {integer, integer}
+    Serializer for creating booking
+
+    Structure:
+    {
+        "slot": int,
+        "seats": [int]
+    }
+
+    Notes:
+        - Seats must belong to slot cinema
+        - Seats must be active
+        - Seats must not be empty
+        - Duplicate seats not allowed
+        - Seats must not already be booked
+        - Maximum seats limited by MAX_SEATS_PER_BOOKING
+        - Seat and active slot must exist
     """
 
     # Validation: Existence of seat in cinema and that it is active
     seats = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Seat.objects.filter(is_active=True),
+        many=True, queryset=Seat.objects.filter(is_active=True), allow_empty=False
     )
 
     # Validation: Existence of an active slot beyond current date and time
@@ -33,6 +46,14 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
         fields = ("slot", "seats")
 
     def validate(self, attrs):
+        """
+        Validates the following before insertion:
+        - Duplicate seats are not passed
+        - Maximum MAX_SEATS_PER_BOOKING seats can be booked per booking
+        - Entered seat does not belong to the cinema of the slot
+        - Entered seat is already booked for the slot
+        """
+
         slot = attrs["slot"]
         seats = attrs["seats"]
         cinema = slot.cinema
@@ -79,6 +100,12 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        """
+        - Creates boooking based on the slot
+        - Sets the related seat in the through table with corresponding booking ID
+        - Uses atomic transaction for performing the above operations
+        """
+
         slot = validated_data["slot"]
         seats = validated_data["seats"]
 
@@ -98,7 +125,29 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
 
 
 class BookingCreateResponseSerializer(serializers.ModelSerializer):
-    """Serializer to be used for returning `seats`, `seat_count` and `total_price` for the current booking"""
+    """
+    Serializer for booking create response
+
+    Structure:
+    {
+        "id": int,
+        "created_at": datetime,
+        "status": string,
+        "total_price": decimal,
+        "seat_count": int,
+        "seats": [
+            {
+                "id": int,
+                "seat_row": int,
+                "seat_number": int
+            }
+        ]
+    }
+
+    Notes:
+        - total_price computed dynamically
+        - seat_count derived from seats
+    """
 
     seats = CinemaSerializers.SeatSerializer(many=True, read_only=True)
     seat_count = serializers.IntegerField(source="seats.count", read_only=True)
@@ -121,7 +170,39 @@ class BookingCreateResponseSerializer(serializers.ModelSerializer):
 
 class BookingListSerializer(BookingCreateResponseSerializer):
     """
-    Serializer to be used for returning list of all bookings
+    Serializer for listing bookings
+
+    Structure:
+    {
+        "id": int,
+        "created_at": datetime,
+        "status": string,
+        "total_price": decimal,
+        "seat_count": int,
+        "seats": [
+            {
+                "id": int,
+                "seat_row": int,
+                "seat_number": int
+            }
+        ],
+        "slot": {
+            "id": int,
+            "schedule": datetime,
+            "price": decimal,
+            "language": string,
+            "movie": {
+                "id": int,
+                "name": string
+            },
+            "cinema": {
+                "id": int,
+                "name": string,
+                "address": string,
+                "city": string
+            }
+        }
+    }
     """
 
     slot = SlotListSerializer(read_only=True)

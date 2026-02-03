@@ -1,8 +1,7 @@
 from datetime import timedelta
 
-from django.test import TestCase
 from django.utils import timezone
-from rest_framework.test import APIClient
+from rest_framework import status, test
 
 from apps.booking.models import Booking
 from apps.cinema.models import Cinema
@@ -12,7 +11,7 @@ from apps.slot.models import Slot
 from apps.user.models import User
 
 
-class BookingBaseTest(TestCase):
+class BookingBaseTest(test.APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.now = timezone.now()
@@ -46,16 +45,13 @@ class BookingBaseTest(TestCase):
         cls.slot = Slot.objects.create(
             schedule=cls.now + timedelta(hours=1),
             end_time=(cls.now + timedelta(hours=3)).time(),
-            price=200,
+            price=212,
             movie=cls.movie,
             cinema=cls.cinema,
             language=cls.language,
         )
 
         cls.seats = list(cls.cinema.seats.filter(is_active=True)[:3])
-
-    def setUp(self):
-        self.client = APIClient()
 
     def login(self):
         self.client.force_authenticate(self.user)
@@ -76,9 +72,9 @@ class TestBookingCreate(BookingBaseTest):
 
         res = self.client.post("/api/bookings/", data, format="json")
 
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data["seat_count"], 2)
-        self.assertEqual(res.data["total_price"], 400)
+        self.assertEqual(res.data["total_price"], 424)
         self.assertEqual(res.data["status"], Booking.BookingStatus.BOOKED)
 
         self.assertEqual(Booking.objects.count(), 1)
@@ -91,7 +87,7 @@ class TestBookingCreate(BookingBaseTest):
 
         res = self.client.post("/api/bookings/", data, format="json")
 
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_seat_from_other_cinema_invalid(self):
         other = Cinema.objects.create(
@@ -111,7 +107,7 @@ class TestBookingCreate(BookingBaseTest):
 
         res = self.client.post("/api/bookings/", data, format="json")
 
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_already_booked_seat_invalid(self):
         Booking.objects.create(
@@ -127,7 +123,7 @@ class TestBookingCreate(BookingBaseTest):
 
         res = self.client.post("/api/bookings/", data, format="json")
 
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TestBookingList(BookingBaseTest):
@@ -147,7 +143,7 @@ class TestBookingList(BookingBaseTest):
     def test_list_returns_user_bookings_only(self):
         res = self.client.get("/api/bookings/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data["results"]), 1)
 
     # Filtering
@@ -184,7 +180,7 @@ class TestBookingCancel(BookingBaseTest):
     def test_cancel_success(self):
         res = self.client.patch(f"/api/bookings/{self.booking.id}/cancel/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.status, Booking.BookingStatus.CANCELLED)
@@ -195,7 +191,7 @@ class TestBookingCancel(BookingBaseTest):
 
         res = self.client.patch(f"/api/bookings/{self.booking.id}/cancel/")
 
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_cancel_expired_slot_invalid(self):
         self.slot.schedule = timezone.now() - timedelta(hours=1)
@@ -203,4 +199,4 @@ class TestBookingCancel(BookingBaseTest):
 
         res = self.client.patch(f"/api/bookings/{self.booking.id}/cancel/")
 
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
