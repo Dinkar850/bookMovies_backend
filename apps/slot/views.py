@@ -12,15 +12,12 @@ from .serializers import SlotDetailsSerializer, SlotListSerializer
 
 
 class SlotBaseMixin:
-    def get_now(self):
-        """Returns now to a predefined time"""
-
-        return timezone.now()
+    """Mixin to be used by all views for getting common queryset"""
 
     def base_queryset(self):
         """Sets queryset for obtaining active slots beyond current date and time plus optimizes fetch using select and prefetch related"""
 
-        now = self.get_now()
+        now = timezone.now()
 
         return (
             Slot.objects.filter(is_active=True, schedule__gte=now)
@@ -31,8 +28,39 @@ class SlotBaseMixin:
 
 class SlotListView(SlotBaseMixin, generics.ListAPIView):
     """
-    View that is responsible for returning list of active slots with schedule greater than current date and time:
-    - filtered based on `SlotFilter`
+    GET /api/slots/
+
+    Description:
+        - Returns list of active upcoming slots
+        - Supports filtering using SlotFilter
+
+    Query Params:
+        language_id:int
+        city_id:int
+        cinema_id:int
+        movie_id:int
+        date:date
+
+    Response:
+        200 OK
+        [
+            {
+                "id": int,
+                "schedule": datetime,
+                "price": decimal,
+                "language": string,
+                "movie": {
+                    "id": int,
+                    "name": string
+                },
+                "cinema": {
+                    "id": int,
+                    "name": string,
+                    "address": string,
+                    "city": string
+                }
+            }
+        ]
     """
 
     serializer_class = SlotListSerializer
@@ -40,21 +68,66 @@ class SlotListView(SlotBaseMixin, generics.ListAPIView):
     filterset_class = SlotFilter
 
     def get_queryset(self):
+        """Generates queryset from base mixin to be used by this view"""
+
         return self.base_queryset()
 
 
 class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
     """
-    View that is responsible for:
-    - returning detailed active slot with schedule greater than current date and time
-    - including cinema's structure (`rows`, `seats_per_row`)
-    - fetching booked seats for this slot
+    GET /api/slots/{id}/
+
+    Description:
+        - Returns detailed information for a single active slot (not expired and `is_active=True`)
+        - Includes cinema seating layout
+        - Includes booked seats
+        - Includes currently active seats
+
+    Response:
+        200 OK
+        {
+            "id": int,
+            "schedule": datetime,
+            "price": decimal,
+            "language": string,
+            "movie": {
+                    "id": int,
+                    "name": string
+                },
+            "cinema": {
+                "id": int,
+                "name": string,
+                "address": string,
+                "city": string
+            }
+            "booked_seats": [
+                {
+                    "id": int,
+                    "seat_row": int,
+                    "seat_number": int
+                }
+            ],
+            "active_seats": [
+                {
+                    "id": int,
+                    "seat_row": int,
+                    "seat_number": int
+                }
+            ]
+        }
+
+    Errors:
+        404 Not Found:
+            - Slot not found
     """
 
     serializer_class = SlotDetailsSerializer
 
     def get_queryset(self):
-        """Populates `active_seats` and `booked_seats` attribute for `confirmed_bookings` by using a custom queryset"""
+        """
+        - Generates queryset from base mixin to be used by this view
+        - Populates `active_seats` and `booked_seats` attribute for `confirmed_bookings` by using a custom queryset
+        """
 
         # queryset for fetching and ordering all seats
         cinema_seats = CinemaModels.Seat.objects.order_by("id")
