@@ -46,7 +46,7 @@ def clear_refresh_cookie(res):
 
 class RegisterView(generics.CreateAPIView):
     """
-    POST /auth/register/
+    POST /api/auth/register/
 
     Description:
         - Creates new user account
@@ -97,7 +97,7 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(views.TokenObtainPairView):
     """
-    POST /auth/login/
+    POST /api/auth/login/
 
     Description:
         - Authenticates user credentials
@@ -150,7 +150,7 @@ class LoginView(views.TokenObtainPairView):
 
 class LogoutView(APIView):
     """
-    POST /auth/logout/
+    POST /api/auth/logout/
 
     Description:
         - Blacklists current refresh token
@@ -197,6 +197,7 @@ class LogoutView(APIView):
 class UserView(generics.RetrieveUpdateDestroyAPIView):
     """
     Endpoints for managing current authenticated user
+    - /api/user/
 
     Permissions:
         - IsAuthenticated
@@ -296,7 +297,7 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
 @method_decorator(csrf_protect, name="dispatch")
 class TokenRefreshView(views.TokenRefreshView):
     """
-    POST /auth/refresh/
+    POST /api/auth/token/refresh/
 
     Description:
         - Reads refresh token from HttpOnly cookie
