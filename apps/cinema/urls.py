@@ -1,8 +1,11 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from .views import CinemaDetailsView, CinemaListView
+from .views import CinemaViewset
+
+router = DefaultRouter()
+router.register(r"cinemas", CinemaViewset, basename="cinemas")
 
 urlpatterns = [
-    path("", CinemaListView.as_view(), name="cinemas"),
-    path("<int:pk>/", CinemaDetailsView.as_view(), name="cinema"),
+    path("", include(router.urls)),
 ]
