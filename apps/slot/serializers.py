@@ -8,10 +8,30 @@ from .models import Slot
 
 class SlotListSerializer(serializers.ModelSerializer):
     """
-    Serializer for slots that:
-    - has nested relation with movies to show movie's id and name
-    - has nested relation with cinemas to show cinema's id, name, address and city
-    - additionally returns slot's id, schedule and price
+    Serializer for slot list
+
+    Structure:
+    {
+        "id": int,
+        "schedule": datetime,
+        "price": decimal,
+        "language": string,
+        "movie": {
+            "id": int,
+            "name": string
+        },
+        "cinema": {
+            "id": int,
+            "name": string,
+            "address": string,
+            "city": string
+        }
+    }
+
+    Notes:
+        - Movie nested using MovieNameSerializer
+        - Cinema nested using CinemaListSerializer
+        - Language returned using __str__
     """
 
     movie = MovieNameSerializer(read_only=True)
@@ -25,11 +45,45 @@ class SlotListSerializer(serializers.ModelSerializer):
 
 class SlotDetailsSerializer(SlotListSerializer):
     """
-    Serializer for showing a detailed slot that contains:
-    - all fields from `SlotListSerializer`
-    - adds `seat_per_row` and `rows` for cinema details in case slot is selected from a movie details page
-    - adds `booked_seats` in that slot that gets set in `SlotDetailsViewSerializer`
-    - adds `active_seats` in that slot that gets set in `SlotDetailsViewSerializer`
+    Serializer for slot details
+
+    Structure:
+    {
+        "id": int,
+        "schedule": datetime,
+        "price": decimal,
+        "language": string,
+        "movie": {
+            "id": int,
+            "name": string
+        },
+        "cinema": {
+            "id": int,
+            "name": string,
+            "address": string,
+            "city": string,
+            "rows": int,
+            "seats_per_row": int
+        },
+        "booked_seats": [
+            {
+                "id": int,
+                "seat_row": int,
+                "seat_number": int
+            }
+        ],
+        "active_seats": [
+            {
+                "id": int,
+                "seat_row": int,
+                "seat_number": int
+            }
+        ]
+    }
+
+    Notes:
+        - booked_seats populated dynamically in view
+        - active_seats populated from cinema relation
     """
 
     cinema = CinemaSerializers.CinemaDetailsSerializer(read_only=True)

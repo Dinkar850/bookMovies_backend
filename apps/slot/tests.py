@@ -1,9 +1,8 @@
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 from django.utils import timezone
-from rest_framework.test import APIClient
+from rest_framework import status, test
 
 from apps.cinema.models import Cinema
 from apps.core.models import City, Language
@@ -11,7 +10,7 @@ from apps.movie.models import Movie
 from apps.slot.models import Slot
 
 
-class SlotBaseTest(TestCase):
+class SlotBaseTest(test.APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.now = timezone.now()
@@ -41,7 +40,7 @@ class SlotBaseTest(TestCase):
         return Slot(
             schedule=start,
             end_time=end,
-            price=200,
+            price=212,
             movie=self.movie,
             cinema=self.cinema,
             language=self.language,
@@ -67,7 +66,7 @@ class TestSlotModelValidation(SlotBaseTest):
         slot = Slot(
             schedule=start,
             end_time=(start - timedelta(hours=1)).time(),
-            price=200,
+            price=212,
             movie=self.movie,
             cinema=self.cinema,
             language=self.language,
@@ -97,7 +96,7 @@ class TestSlotModelValidation(SlotBaseTest):
         slot = Slot(
             schedule=self.now + timedelta(hours=1),
             end_time=(self.now + timedelta(hours=3)).time(),
-            price=200,
+            price=212,
             movie=self.movie,
             cinema=self.cinema,
             language=other,
@@ -129,12 +128,10 @@ class TestSlotAPI(SlotBaseTest):
     # API Tests
 
     def setUp(self):
-        self.client = APIClient()
-
         self.slot = Slot.objects.create(
             schedule=self.now + timedelta(hours=1),
             end_time=(self.now + timedelta(hours=3)).time(),
-            price=200,
+            price=212,
             movie=self.movie,
             cinema=self.cinema,
             language=self.language,
@@ -145,7 +142,7 @@ class TestSlotAPI(SlotBaseTest):
     def test_list_returns_active_future_slots(self):
         res = self.client.get("/api/slots/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
 
     def test_filter_by_language(self):
@@ -179,11 +176,11 @@ class TestSlotAPI(SlotBaseTest):
     def test_detail_returns_seats(self):
         res = self.client.get(f"/api/slots/{self.slot.id}/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn("active_seats", res.data)
         self.assertIn("booked_seats", res.data)
 
     def test_invalid_slot_returns_404(self):
         res = self.client.get("/api/slots/999/")
 
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
