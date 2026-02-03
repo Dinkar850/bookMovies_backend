@@ -6,7 +6,23 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for User model"""
+    """
+    Serializer for user model
+
+    JSON Structure:
+    {
+        "id": int,
+        "first_name": string,
+        "last_name": string,
+        "email": string,
+        "phone_number": string,
+        "password": string
+    }
+
+    Notes:
+        - Password write only
+        - Email normalized to lowercase
+    """
 
     class Meta:
         model = User
@@ -15,6 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         """Checks after conversion of email into lower case directly from JSON body before insertion"""
+
         data = data.copy()
 
         if "email" in data:
@@ -24,11 +41,21 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Creates user using validated data, called when hit user.save() from `RegisterView`"""
+
         return User.objects.create_user(**validated_data)
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating user"""
+    """
+    Serializer for updating user fields
+
+    JSON Structure:
+    {
+        "first_name": string,
+        "last_name": string,
+        "phone_number": string
+    }
+    """
 
     class Meta:
         model = User
@@ -36,9 +63,24 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 class TokenObtainPairSerializer(jwtSerializers.TokenObtainPairSerializer):
-    """Custom serializer for `TokenObtainPairSerializer` that checks after converting email to lower case"""
+    """
+    Serializer for authentication tokens
+
+    JSON Structure:
+    {
+        "email": string,
+        "password": string,
+        "access": string,
+        "refresh": string
+    }
+
+    Notes:
+        - View may modify or hide refresh
+    """
 
     def validate(self, attrs):
+        """Custom validation for email that converts entered email into lower case prior to validation"""
+
         email = attrs["email"]
 
         if isinstance(email, str):

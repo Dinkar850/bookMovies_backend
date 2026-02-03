@@ -1,11 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
-from rest_framework.test import APIClient
+from rest_framework import status, test
 
 User = get_user_model()
 
 
-class TestUserAuth(TestCase):
+class TestUserAuth(test.APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(
@@ -14,9 +13,6 @@ class TestUserAuth(TestCase):
             first_name="John",
             phone_number="9876543210",
         )
-
-    def setUp(self):
-        self.client = APIClient()
 
     # Register
 
@@ -31,7 +27,7 @@ class TestUserAuth(TestCase):
         res = self.client.post("/api/auth/register/", data)
 
         # response
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertIn("access", res.data)
         self.assertIn("refresh", res.cookies)
 
@@ -67,7 +63,7 @@ class TestUserAuth(TestCase):
             },
         )
 
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_invalid_phone(self):
         res = self.client.post(
@@ -80,7 +76,7 @@ class TestUserAuth(TestCase):
             },
         )
 
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     # Login
 
@@ -93,7 +89,7 @@ class TestUserAuth(TestCase):
             },
         )
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn("access", res.data)
         self.assertIn("refresh", res.cookies)
 
@@ -106,7 +102,7 @@ class TestUserAuth(TestCase):
             },
         )
 
-        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_login_email_case_insensitive(self):
         res = self.client.post(
@@ -117,7 +113,7 @@ class TestUserAuth(TestCase):
             },
         )
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     # Refresh
 
@@ -134,12 +130,12 @@ class TestUserAuth(TestCase):
 
         res = self.client.post("/api/auth/token/refresh/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn("access", res.data)
 
     def test_refresh_missing_cookie(self):
         res = self.client.post("/api/auth/token/refresh/")
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     # Helpers
 
@@ -151,8 +147,57 @@ class TestUserAuth(TestCase):
                 "password": "StrongPass123",
             },
         )
-        token = login.data["access"]
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        self.access = login.data["access"]
+        self.refresh = login.cookies["refresh"].value
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access}")
+        self.client.cookies["refresh"] = self.refresh
+
+    # Token rotation
+
+    def test_refresh_rotates_token(self):
+        self.authenticate()
+
+        res = self.client.post("/api/auth/token/refresh/")
+
+        new_refresh = res.cookies["refresh"].value
+
+        self.assertNotEqual(self.refresh, new_refresh)
+
+    def test_old_refresh_invalid_after_rotation(self):
+        self.authenticate()
+
+        res = self.client.post("/api/auth/token/refresh/")
+        new_refresh = res.cookies["refresh"].value
+
+        # old should fail
+        self.client.cookies["refresh"] = self.refresh
+        res = self.client.post("/api/auth/token/refresh/")
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # new should work
+        self.client.cookies["refresh"] = new_refresh
+        res = self.client.post("/api/auth/token/refresh/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    # Logout
+
+    def test_logout_clears_cookie(self):
+        self.authenticate()
+
+        res = self.client.post("/api/auth/logout/")
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.cookies["refresh"].value, "")
+
+    def test_logout_blacklists_refresh(self):
+        self.authenticate()
+
+        self.client.post("/api/auth/logout/")
+
+        self.client.cookies["refresh"] = self.refresh
+        res = self.client.post("/api/auth/token/refresh/")
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # User endpoints
 
@@ -161,7 +206,7 @@ class TestUserAuth(TestCase):
 
         res = self.client.get("/api/user/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data["email"], self.user.email)
         self.assertEqual(res.data["first_name"], self.user.first_name)
 
@@ -170,7 +215,7 @@ class TestUserAuth(TestCase):
 
         res = self.client.patch("/api/user/", {"first_name": "Updated"})
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.first_name, "Updated")
@@ -180,7 +225,7 @@ class TestUserAuth(TestCase):
 
         res = self.client.delete("/api/user/")
 
-        self.assertEqual(res.status_code, 204)
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
 
         self.user.refresh_from_db()
         self.assertFalse(self.user.is_active)
@@ -190,4 +235,4 @@ class TestUserAuth(TestCase):
 
     def test_user_requires_auth(self):
         res = self.client.get("/api/user/")
-        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
