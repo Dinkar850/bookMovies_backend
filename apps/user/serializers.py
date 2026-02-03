@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for user model
 
-    JSON Structure:
+    Structure:
     {
         "id": int,
         "first_name": string,
@@ -30,7 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def to_internal_value(self, data):
-        """Checks after conversion of email into lower case directly from JSON body before insertion"""
+        """Checks after conversion of email into lower case directly from body before insertion"""
 
         data = data.copy()
 
@@ -49,7 +49,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for updating user fields
 
-    JSON Structure:
+    Structure:
     {
         "first_name": string,
         "last_name": string,
@@ -66,7 +66,7 @@ class TokenObtainPairSerializer(jwtSerializers.TokenObtainPairSerializer):
     """
     Serializer for authentication tokens
 
-    JSON Structure:
+    Structure:
     {
         "email": string,
         "password": string,
