@@ -1,8 +1,7 @@
 from datetime import timedelta
 
-from django.test import TestCase
 from django.utils import timezone
-from rest_framework.test import APIClient
+from rest_framework import status, test
 
 from apps.cinema.models import Cinema
 from apps.core.models import City, Language
@@ -10,7 +9,7 @@ from apps.movie.models import Movie
 from apps.slot.models import Slot
 
 
-class TestCinemaViews(TestCase):
+class TestCinemaViews(test.APITestCase):
     @classmethod
     def setUpTestData(cls):
         now = timezone.now()
@@ -38,7 +37,7 @@ class TestCinemaViews(TestCase):
             language=cls.language,
             schedule=now + timedelta(days=1),
             end_time=(now + timedelta(days=1, hours=2)).time(),
-            price=200,
+            price=212,
             is_active=True,
         )
 
@@ -56,12 +55,9 @@ class TestCinemaViews(TestCase):
             language=cls.language,
             schedule=now + timedelta(days=1),
             end_time=(now + timedelta(days=1, hours=2)).time(),
-            price=200,
+            price=212,
             is_active=False,
         )
-
-    def setUp(self):
-        self.client = APIClient()
 
     # Seat auto-creation
 
@@ -109,7 +105,7 @@ class TestCinemaViews(TestCase):
     def test_list_returns_only_cinemas_with_active_slots(self):
         res = self.client.get("/api/cinemas/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         names = [c["name"] for c in res.data["results"]]
 
@@ -145,7 +141,7 @@ class TestCinemaViews(TestCase):
     def test_detail_success(self):
         res = self.client.get(f"/api/cinemas/{self.cinema_active.id}/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         self.assertIn("rows", res.data)
         self.assertIn("seats_per_row", res.data)
@@ -153,9 +149,9 @@ class TestCinemaViews(TestCase):
     def test_detail_not_found_if_no_active_slot(self):
         res = self.client.get(f"/api/cinemas/{self.cinema_inactive.id}/")
 
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_detail_invalid_id(self):
         res = self.client.get("/api/cinemas/999/")
 
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
