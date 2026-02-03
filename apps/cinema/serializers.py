@@ -5,8 +5,18 @@ from .models import Cinema, Seat
 
 class CinemaListSerializer(serializers.ModelSerializer):
     """
-    Serializer for cinemas in list:
-    - returns city as strings (defined in def(__str__))
+    Serializer for cinema list
+
+    Structure:
+    {
+        "id": int,
+        "name": string,
+        "address": string,
+        "city": string
+    }
+
+    Notes:
+        - City returned using __str__
     """
 
     city = serializers.StringRelatedField(read_only=True)
@@ -18,9 +28,17 @@ class CinemaListSerializer(serializers.ModelSerializer):
 
 class CinemaDetailsSerializer(CinemaListSerializer):
     """
-    Serializer for cinema details that:
-    - returns all details as in `CinemaListSerializer`
-    - adds `rows` and `seats_per_row`
+    Serializer for cinema details
+
+    Structure:
+    {
+        "id": int,
+        "name": string,
+        "address": string,
+        "city": string,
+        "rows": int,
+        "seats_per_row": int
+    }
     """
 
     class Meta(CinemaListSerializer.Meta):
@@ -28,7 +46,16 @@ class CinemaDetailsSerializer(CinemaListSerializer):
 
 
 class SeatSerializer(serializers.ModelSerializer):
-    """Serializer for seat in cinema with `id`, `seat_row`, `seat_number`"""
+    """
+    Serializer for seat
+
+    Structure:
+    {
+        "id": int,
+        "seat_row": int,
+        "seat_number": int
+    }
+    """
 
     class Meta:
         model = Seat

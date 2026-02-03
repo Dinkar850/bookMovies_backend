@@ -25,29 +25,67 @@ class CinemaBaseMixin:
 
 class CinemaListView(CinemaBaseMixin, CoreViews.ListView):
     """
-    View for cinema lists that:
-    - filters on city
-    - enables search on cinema's name
-    - paginated and ordered on `created_at`
-    - only retrieves cinemas which have at least one active slots
+    GET /api/cinemas/
+
+    Description:
+        - Returns list of cinemas having active slots
+        - Supports filtering by city
+        - Supports search by cinema name
+        - Cursor paginated
+
+    Query Params:
+        city_id:int
+        search:string
+
+    Response:
+        200 OK
+        [
+            {
+                "id": int,
+                "name": string,
+                "address": string,
+                "city": string
+            }
+        ]
     """
 
     serializer_class = CinemaListSerializer
     filterset_class = CinemaFilter
-    search_fields = ["name"]
+    search_fields = ("name",)
 
     def get_queryset(self):
+        """Generates queryset from base mixin to be used by this view"""
+
         return self.base_queryset()
 
 
 class CinemaDetailsView(CinemaBaseMixin, generics.RetrieveAPIView):
     """
-    View for cinema details that:
-    - retrieves all information that was present in cinema list details
-    - additionally adds `rows` and `seats_per_row`
+    GET /api/cinemas/{id}/
+
+    Description:
+        - Returns detailed information for a single cinema
+        - Cinema must have at least one active slot
+
+    Response:
+        200 OK
+        {
+            "id": int,
+            "name": string,
+            "address": string,
+            "city": string,
+            "rows": int,
+            "seats_per_row": int
+        }
+
+    Errors:
+        404 Not Found:
+            - Cinema not found
     """
 
     serializer_class = CinemaDetailsSerializer
 
     def get_queryset(self):
+        """Generates queryset from base mixin to be used by this view"""
+
         return self.base_queryset()
