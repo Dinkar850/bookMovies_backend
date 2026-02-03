@@ -28,7 +28,7 @@ class MovieBaseMixin:
 
 class MovieListView(MovieBaseMixin, CoreViews.ListView):
     """
-    GET /movies/
+    GET /api/movies/
 
     Description:
         - Returns list of movies having active slots
@@ -69,7 +69,7 @@ class MovieListView(MovieBaseMixin, CoreViews.ListView):
 
 class MovieDetailsView(MovieBaseMixin, generics.RetrieveAPIView):
     """
-    GET /movies/{slug}/
+    GET /api/movies/{slug}/
 
     Description:
         - Returns detailed information for a single movie
@@ -91,7 +91,7 @@ class MovieDetailsView(MovieBaseMixin, generics.RetrieveAPIView):
     Errors:
         404 Not Found:
             - Movie not found
-            - No active slots available
+
     """
 
     serializer_class = MovieDetailsSerializer

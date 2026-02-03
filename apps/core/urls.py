@@ -3,7 +3,7 @@ from django.urls import path
 from .views import CityListView, GenreListView, LanguageListView
 
 urlpatterns = [
-    path("genres/", GenreListView.as_view()),
-    path("cities/", CityListView.as_view()),
-    path("languages/", LanguageListView.as_view()),
+    path("filters/genres/", GenreListView.as_view(), name="genres"),
+    path("filters/cities/", CityListView.as_view(), name="cities"),
+    path("filters/languages/", LanguageListView.as_view(), name="languages"),
 ]
