@@ -27,7 +27,137 @@ class BookingViewSet(
     mixins.CreateModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Viewset for booking, handles list(paginated and filtered), retrieve, create and cancel specific booking using `detail=True`"""
+    """
+    Endpoints for managing user bookings
+
+    Permissions:
+        - IsAuthenticated
+
+    Allowed Methods:
+        GET, POST, PATCH
+
+
+    LIST:
+    GET /api/bookings/
+
+    Description:
+        - Returns paginated booking history of current user
+        - Supports filtering using BookingFilter
+
+    Query Params:
+        booking_status: "B" | "P" | "C"
+        booking_type: "upcoming" | "history"
+        booking_date:date
+        cinema_id:int
+        movie_id:int
+        slot_id:int
+        city_id:int
+        language_id:int
+
+    Response:
+        200 OK
+        [
+            {
+                "id": int,
+                "created_at": datetime,
+                "status": string,
+                "total_price": decimal,
+                "seat_count": int,
+                "seats": [
+                    {
+                        "id": int,
+                        "seat_row": int,
+                        "seat_number": int
+                    }
+                ],
+                "slot": {
+                    "id": int,
+                    "schedule": datetime,
+                    "price": decimal,
+                    "language": string,
+                    "movie": {
+                        "id": int,
+                        "name": string
+                    },
+                    "cinema": {
+                        "id": int,
+                        "name": string,
+                        "address": string,
+                        "city": string
+                    }
+                }
+            }
+        ]
+
+    Errors:
+        401 Unauthorized:
+            - Authentication credentials not provided
+            - Invalid or expired token
+
+
+    CREATE:
+    POST /api/bookings/
+
+    Description:
+        - Creates new booking for selected slot and seats
+
+    Request Body:
+        {
+            "slot": int,
+            "seats": [int]
+        }
+
+    Response:
+        201 Created
+        {
+            "detail": string,
+            "id": int,
+            "created_at": datetime,
+            "status": string,
+            "total_price": decimal,
+            "seat_count": int,
+            "seats": [
+                {
+                    "id": int,
+                    "seat_row": int,
+                    "seat_number": int
+                }
+            ]
+        }
+
+    Errors:
+        400 Bad Request:
+            - Validation errors
+            - Seats already booked
+            - Invalid cinema seats
+            - Seat limit exceeded
+        401 Unauthorized:
+            - Authentication credentials not provided
+            - Invalid or expired token
+
+
+    CANCEL:
+    PATCH /api/bookings/{id}/cancel/
+
+    Description:
+        - Cancels existing booking by updating status to cancelled
+
+    Response:
+        200 OK
+        {
+            "detail": string
+        }
+
+    Errors:
+        400 Bad Request:
+            - Already cancelled
+            - Slot expired
+        401 Unauthorized:
+            - Authentication required
+            - Invalid or expired token
+        404 Not Found:
+            - Booking not found
+    """
 
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = CorePagination.BaseCursorPagination
@@ -35,6 +165,8 @@ class BookingViewSet(
     filterset_class = BookingFilter
 
     def get_queryset(self):
+        """Uses custom queryset for optimizations with this view"""
+
         return (
             Booking.objects.filter(user=self.request.user)
             .select_related(
@@ -46,8 +178,15 @@ class BookingViewSet(
         )
 
     def get_serializer_class(self):
+        """
+        Sets serializer with the following conditions:
+        - Uses `BookingCreateRequestSerializer` when action is create
+        - Otherwise uses `BookingListSerializer`
+        """
+
         if self.action == "create":
             return BookingCreateRequestSerializer
+
         return BookingListSerializer
 
     def create(self, request, *args, **kwargs):
@@ -60,6 +199,7 @@ class BookingViewSet(
         res_serializer = BookingCreateResponseSerializer(
             booking, context=self.get_serializer_context()
         )
+
         return response.Response(
             {"detail": BookingMessages.CREATED, **res_serializer.data},
             status=status.HTTP_201_CREATED,

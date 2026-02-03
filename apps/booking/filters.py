@@ -57,7 +57,11 @@ class BookingFilter(django_filters.FilterSet):
         ]
 
     def filter_status(self, qs, name, value):
-        """Filters parent queryset based on status"""
+        """
+        Filters parent queryset based on status:
+        - `upcoming`: currently active bookings
+        - `history`: past bookings
+        """
 
         now = timezone.now()
 
