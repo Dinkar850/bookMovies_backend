@@ -12,7 +12,10 @@ class MovieBaseMixin:
     """Sets base queryset to be used by all views"""
 
     def base_queryset(self):
-        """Generates a queryset for retrieving movie entries having at least one active slot"""
+        """
+        - Sets now to current date and time
+        - Generates a queryset for retrieving movie entries having at least one active slot
+        """
 
         now = timezone.now()
 
@@ -25,10 +28,33 @@ class MovieBaseMixin:
 
 class MovieListView(MovieBaseMixin, CoreViews.ListView):
     """
-    View for movie lists that:
-    - filters on cinema_id, genre, language, release_date
-    - enables search on movie's name
-    - only retrieves movies which have active slots
+    GET /movies/
+
+    Description:
+        - Returns list of movies having active slots
+        - Supports filtering by cinema, genre, language, release_date
+        - Supports search by movie name
+
+    Query Params:
+        cinema_id:int
+        genre_id:int
+        language_id:int
+        release_date:date
+        search:string
+
+    Response:
+        200 OK
+        [
+            {
+                "id": int,
+                "name": string,
+                "slug": string,
+                "genres": [string],
+                "languages": [string],
+                "cover_image": string,
+                "release_date": date
+            }
+        ]
     """
 
     serializer_class = MovieListSerializer
@@ -36,14 +62,42 @@ class MovieListView(MovieBaseMixin, CoreViews.ListView):
     search_fields = ("name",)
 
     def get_queryset(self):
+        """Generates queryset from base mixin to be used by this view"""
+
         return self.base_queryset()
 
 
 class MovieDetailsView(MovieBaseMixin, generics.RetrieveAPIView):
-    """View for movie details that retrieves all information that was present in movie list details for a movie that has at least one active slot"""
+    """
+    GET /movies/{slug}/
+
+    Description:
+        - Returns detailed information for a single movie
+        - Movie must have at least one active slot
+
+    Response:
+        200 OK
+        {
+            "id": int,
+            "name": string,
+            "slug": string,
+            "genres": [string],
+            "languages": [string],
+            "cover_image": string,
+            "release_date": date,
+            "description": string
+        }
+
+    Errors:
+        404 Not Found:
+            - Movie not found
+            - No active slots available
+    """
 
     serializer_class = MovieDetailsSerializer
     lookup_field = "slug"
 
     def get_queryset(self):
+        """Generates queryset from base mixin to be used by this view"""
+
         return self.base_queryset()

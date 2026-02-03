@@ -7,7 +7,7 @@ from .models import Movie
 
 class MovieFilter(django_filters.FilterSet):
     """
-    Filter set for movie list view which contains:
+    Filterset for movie list view which contains:
     - **genre_id**: multiple IDs(integers) and comma separated
     - **language_id**: multiple IDs(integers) and comma separated
     - **cinema_id**: multiple IDs(integers) and comma separated

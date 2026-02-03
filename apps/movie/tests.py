@@ -1,8 +1,7 @@
 from datetime import timedelta
 
-from django.test import TestCase
 from django.utils import timezone
-from rest_framework.test import APIClient
+from rest_framework import status, test
 
 from apps.cinema.models import Cinema
 from apps.core.models import City, Genre, Language
@@ -10,7 +9,7 @@ from apps.movie.models import Movie
 from apps.slot.models import Slot
 
 
-class TestMovieViews(TestCase):
+class TestMovieViews(test.APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.genre = Genre.objects.create(name="Action")
@@ -47,7 +46,7 @@ class TestMovieViews(TestCase):
             language=cls.language,
             schedule=now + timedelta(days=1),
             end_time=(now + timedelta(days=1, hours=2)).time(),
-            price=200,
+            price=212,
             is_active=True,
         )
 
@@ -57,19 +56,16 @@ class TestMovieViews(TestCase):
             language=cls.language,
             schedule=now + timedelta(days=1),
             end_time=(now + timedelta(days=1, hours=2)).time(),
-            price=200,
+            price=212,
             is_active=False,
         )
-
-    def setUp(self):
-        self.client = APIClient()
 
     # List View
 
     def test_movie_list_returns_only_active_movies(self):
         res = self.client.get("/api/movies/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         names = [m["name"] for m in res.data["results"]]
 
@@ -126,18 +122,18 @@ class TestMovieViews(TestCase):
 
         res = self.client.get(f"/api/movies/{slug}/")
 
-        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data["name"], "Active Movie")
         self.assertIn("description", res.data)
 
     def test_movie_detail_invalid_slug(self):
         res = self.client.get("/api/movies/does-not-exist/")
 
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_movie_detail_not_returned_if_no_active_slot(self):
         slug = self.movie_inactive.slug
 
         res = self.client.get(f"/api/movies/{slug}/")
 
-        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)

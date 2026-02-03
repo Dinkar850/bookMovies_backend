@@ -4,7 +4,15 @@ from .models import Movie
 
 
 class MovieNameSerializer(serializers.ModelSerializer):
-    """Serializer for only showing the `id` and `name`` of the movie"""
+    """
+    Serializer for basic movie identity
+
+    Structure:
+    {
+        "id": int,
+        "name": string
+    }
+    """
 
     class Meta:
         model = Movie
@@ -13,8 +21,22 @@ class MovieNameSerializer(serializers.ModelSerializer):
 
 class MovieListSerializer(MovieNameSerializer):
     """
-    Serializer for movies in list:
-    - returns genre and language as strings (defined in def(__str__))
+    Serializer for movie list view
+
+    Structure:
+    {
+        "id": int,
+        "name": string,
+        "slug": string,
+        "genres": [string],
+        "languages": [string],
+        "cover_image": string,
+        "release_date": date
+    }
+
+    Notes:
+        - Genres returned as string using __str__
+        - Languages returned as string using __str__
     """
 
     genres = serializers.StringRelatedField(many=True, read_only=True)
@@ -32,9 +54,19 @@ class MovieListSerializer(MovieNameSerializer):
 
 class MovieDetailsSerializer(MovieListSerializer):
     """
-    Serializer for movie details:
-    - returns all details as in `MovieListSerializer`
-    - additonally include description
+    Serializer for movie details
+
+    Structure:
+    {
+        "id": int,
+        "name": string,
+        "slug": string,
+        "genres": [string],
+        "languages": [string],
+        "cover_image": string,
+        "release_date": date,
+        "description": string
+    }
     """
 
     class Meta(MovieListSerializer.Meta):
