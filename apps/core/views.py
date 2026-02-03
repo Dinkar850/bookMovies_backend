@@ -1,5 +1,4 @@
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics
+from rest_framework import generics
 
 from .models import City, Genre, Language
 from .pagination import BaseCursorPagination
@@ -7,10 +6,9 @@ from .serializers import CitySerializer, GenreSerializer, LanguageSerializer
 
 
 class ListView(generics.ListAPIView):
-    """Base list api view for attaching pagination class as `BaseCursorPagination`, filter backends and search support"""
+    """Base list api view for attaching pagination class as `BaseCursorPagination`"""
 
     pagination_class = BaseCursorPagination
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
 
 
 class GenreListView(ListView):
@@ -19,15 +17,20 @@ class GenreListView(ListView):
 
     Description:
         - Returns list of all genres
+        - Cursor paginated
 
     Response:
         200 OK
-        [
-            {
-                "id": int,
-                "name": string
-            }
-        ]
+        {
+            "next": null,
+            "previous": null,
+            "results": [
+                {
+                    "id": int,
+                    "name": string
+                }
+            ]
+        }
     """
 
     queryset = Genre.objects.all()
@@ -40,15 +43,20 @@ class LanguageListView(ListView):
 
     Description:
         - Returns list of all languages
+        - Cursor paginated
 
     Response:
         200 OK
-        [
-            {
-                "id": int,
-                "name": string
-            }
-        ]
+        {
+            "next": null,
+            "previous": null,
+            "results": [
+                {
+                    "id": int,
+                    "name": string
+                }
+            ]
+        }
     """
 
     queryset = Language.objects.all()
@@ -61,15 +69,20 @@ class CityListView(ListView):
 
     Description:
         - Returns list of all cities
+        - Cursor paginated
 
     Response:
         200 OK
-        [
-            {
-                "id": int,
-                "name": string
-            }
-        ]
+        {
+            "next": null,
+            "previous": null,
+            "results": [
+                {
+                    "id": int,
+                    "name": string
+                }
+            ]
+        }
     """
 
     queryset = City.objects.all()

@@ -40,7 +40,7 @@ urlpatterns = [
                 # App endpoints
                 path("", include("apps.user.urls")),
                 path("", include("apps.core.urls")),
-                path("movies/", include("apps.movie.urls")),
+                path("", include("apps.movie.urls")),
             ]
         ),
     ),
