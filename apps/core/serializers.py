@@ -4,7 +4,15 @@ from .models import City, Genre, Language
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Serializer for genre"""
+    """
+    Serializer for genre model
+
+    Structure:
+    {
+        "id": int,
+        "name": string
+    }
+    """
 
     class Meta:
         model = Genre
@@ -12,7 +20,15 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class LanguageSerializer(serializers.ModelSerializer):
-    """Serializer for language"""
+    """
+    Serializer for language model
+
+    Structure:
+    {
+        "id": int,
+        "name": string
+    }
+    """
 
     class Meta:
         model = Language
@@ -20,7 +36,15 @@ class LanguageSerializer(serializers.ModelSerializer):
 
 
 class CitySerializer(serializers.ModelSerializer):
-    """Serializer for city"""
+    """
+    Serializer for city model
+
+    Structure:
+    {
+        "id": int,
+        "name": string
+    }
+    """
 
     class Meta:
         model = City

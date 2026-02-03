@@ -7,28 +7,70 @@ from .serializers import CitySerializer, GenreSerializer, LanguageSerializer
 
 
 class ListView(generics.ListAPIView):
-    """Base list api view for attaching pagination classes and filter backends"""
+    """Base list api view for attaching pagination class as `BaseCursorPagination`, filter backends and search support"""
 
     pagination_class = BaseCursorPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
 
 
 class GenreListView(ListView):
-    """View that returns a list of all genres"""
+    """
+    GET /api/filters/genres/
+
+    Description:
+        - Returns list of all genres
+
+    Response:
+        200 OK
+        [
+            {
+                "id": int,
+                "name": string
+            }
+        ]
+    """
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class LanguageListView(ListView):
-    """View that returns a list of all languages"""
+    """
+    GET /api/filters/languages/
+
+    Description:
+        - Returns list of all languages
+
+    Response:
+        200 OK
+        [
+            {
+                "id": int,
+                "name": string
+            }
+        ]
+    """
 
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
 
 
 class CityListView(ListView):
-    """View that returns a list of all cities"""
+    """
+    GET /api/filters/cities/
+
+    Description:
+        - Returns list of all cities
+
+    Response:
+        200 OK
+        [
+            {
+                "id": int,
+                "name": string
+            }
+        ]
+    """
 
     queryset = City.objects.all()
     serializer_class = CitySerializer
