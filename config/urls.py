@@ -42,7 +42,7 @@ urlpatterns = [
                 path("", include("apps.core.urls")),
                 path("", include("apps.movie.urls")),
                 path("", include("apps.cinema.urls")),
-                path("slots/", include("apps.slot.urls")),
+                path("", include("apps.slot.urls")),
             ]
         ),
     ),

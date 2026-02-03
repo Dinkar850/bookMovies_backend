@@ -1,33 +1,28 @@
 from django.db.models import Prefetch
 from django.utils import timezone
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics
 
 from apps.booking import models as BookingModels
 from apps.cinema import models as CinemaModels
+from apps.core.viewsets import ReadOnlyModelViewset
 
 from .filters import SlotFilter
 from .models import Slot
 from .serializers import SlotDetailsSerializer, SlotListSerializer
 
 
-class SlotBaseMixin:
-    """Mixin to be used by all views for getting common queryset"""
-
-    def base_queryset(self):
-        """Sets queryset for obtaining active slots beyond current date and time plus optimizes fetch using select and prefetch related"""
-
-        now = timezone.now()
-
-        return (
-            Slot.objects.filter(is_active=True, schedule__gte=now)
-            .order_by("schedule")
-            .select_related("movie", "cinema__city", "language")
-        )
-
-
-class SlotListView(SlotBaseMixin, generics.ListAPIView):
+class SlotViewset(ReadOnlyModelViewset):
     """
+    Endpoint for:
+    - Fetching all slots
+    - Fetching a particular slot details with active and booked seats for that slot
+
+    Permissions:
+        - AllowAny
+
+    Allowed Methods:
+        GET
+
+    LIST
     GET /api/slots/
 
     Description:
@@ -61,20 +56,8 @@ class SlotListView(SlotBaseMixin, generics.ListAPIView):
                 }
             }
         ]
-    """
 
-    serializer_class = SlotListSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = SlotFilter
-
-    def get_queryset(self):
-        """Generates queryset from base mixin to be used by this view"""
-
-        return self.base_queryset()
-
-
-class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
-    """
+    RETRIEVE
     GET /api/slots/{id}/
 
     Description:
@@ -121,42 +104,67 @@ class SlotDetailsView(SlotBaseMixin, generics.RetrieveAPIView):
             - Slot not found
     """
 
-    serializer_class = SlotDetailsSerializer
+    filterset_class = SlotFilter
+    serializer_class = SlotListSerializer
+    pagination_class = None
+
+    def get_serializer_class(self):
+        """
+        Sets serializer with the following conditions:
+        - Uses `SlotListSerializer` when action is `list()`
+        - Otherwise uses `SlotDetailsSerializer`
+        """
+
+        if self.action == "list":
+            return SlotListSerializer
+
+        return SlotDetailsSerializer
 
     def get_queryset(self):
         """
-        - Generates queryset from base mixin to be used by this view
-        - Populates `active_seats` and `booked_seats` attribute for `confirmed_bookings` by using a custom queryset
+        - Sets now to current date and time
+        - Generates a queryset for retrieving movie entries having at least one active slot
         """
 
-        # queryset for fetching and ordering all seats
-        cinema_seats = CinemaModels.Seat.objects.order_by("id")
+        now = timezone.now()
 
-        # queryset for filtering confirmed bookings and then fetching only active seats for each booking
-        confirmed_bookings_queryset = BookingModels.Booking.objects.filter(
-            status=BookingModels.Booking.BookingStatus.BOOKED
-        ).prefetch_related(
-            Prefetch(
-                "seat",
-                queryset=cinema_seats.filter(is_active=True),
-                to_attr="booked_seats",
+        base_queryset = (
+            Slot.objects.filter(is_active=True, schedule__gte=now)
+            .order_by("schedule")
+            .select_related("movie", "cinema__city", "language")
+        )
+
+        if self.action == "retrieve":
+            # queryset for fetching and ordering all seats
+            cinema_seats = CinemaModels.Seat.objects.order_by("id")
+
+            # queryset for filtering confirmed bookings and then fetching only active seats for each booking
+            confirmed_bookings_queryset = BookingModels.Booking.objects.filter(
+                status=BookingModels.Booking.BookingStatus.BOOKED
+            ).prefetch_related(
+                Prefetch(
+                    "seat",
+                    queryset=cinema_seats.filter(is_active=True),
+                    to_attr="booked_seats",
+                )
             )
-        )
 
-        return self.base_queryset().prefetch_related(
-            # prefetch responsible for populating confirmed_bookings attribute in slot object with booked status and also populating the booked_seats attribute for each confirmed_booking
-            Prefetch(
-                "bookings",
-                queryset=confirmed_bookings_queryset,
-                to_attr="confirmed_bookings",
-            ),
-            # prefetch responsible for populating active_seats attribute in slot object for that cinema
-            Prefetch(
-                "cinema__seats",
-                queryset=cinema_seats.filter(is_active=True),
-                to_attr="active_seats",
-            ),
-        )
+            return base_queryset.prefetch_related(
+                # prefetch responsible for populating `confirmed_bookings` attribute in slot object with booked status and also populating the `booked_seats` attribute for each confirmed booking
+                Prefetch(
+                    "bookings",
+                    queryset=confirmed_bookings_queryset,
+                    to_attr="confirmed_bookings",
+                ),
+                # prefetch responsible for populating `active_seats`` attribute in slot object for that cinema
+                Prefetch(
+                    "cinema__seats",
+                    queryset=cinema_seats.filter(is_active=True),
+                    to_attr="active_seats",
+                ),
+            )
+
+        return base_queryset
 
     def get_object(self):
         """Get the corresponding slot object as referenced by `pk` in `self.get_queryset()` and set the `booked_seats` attribute to be accessed by `SlotDetailsSerializer`"""
