@@ -21,7 +21,7 @@ class TimeStampedModel(models.Model):
 
 class ActiveableModel(models.Model):
     """
-    Abstract model forL
+    Abstract model for:
     - adding an active state using `is_active` boolean field
     - a custom `active_objects` manager for filtering out only `active` entries
     """

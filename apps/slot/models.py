@@ -80,8 +80,8 @@ class Slot(TimeStampedModel, ActiveableModel):
         if not self.movie.languages.filter(pk=self.language_id).exists():
             raise ValidationError(SlotErrors.INVALID_LANGUAGE)
 
-        # Validation: Slot is overlapping with an existing slot for the same cinema
-        overlapping_slot = Slot.objects.exclude(pk=self.pk).filter(
+        # Validation: Slot is overlapping with an existing active slot for the same cinema
+        overlapping_slot = Slot.active_objects.exclude(pk=self.pk).filter(
             cinema=self.cinema,
             schedule__lt=self.end_schedule,
             end_schedule__gt=self.schedule,
