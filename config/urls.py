@@ -46,12 +46,7 @@ urlpatterns = [
 
 # URLS for dev mode
 if settings.DEBUG:
-    import debug_toolbar
-
-    # Additng debug mode for django queries
     urlpatterns += [
-        path("__debug__/", include(debug_toolbar.urls)),
+        path("__debug__/", include("debug_toolbar.urls")),
     ]
-
-    # Setting path to media directory
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
