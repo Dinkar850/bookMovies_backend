@@ -10,7 +10,7 @@ class BookingFilter(django_filters.FilterSet):
     """
     Filterset for bookings that contain
     - **booking_status**: status of booking ("B: Booked", "P: Pending". "C": Cancelled)
-    - **booking_type**: `history` for past bookings and `upcoming` for current and future
+    - **booking_period**: `past` for past bookings (compared using slot's schedule) and `upcoming` for current and future
     - **booking_date**: date of slot for which booking was made
     - **movie_id**: multiple comma separated movie id's
     - **cinema_id**: multiple comma separated cinema id's
@@ -22,9 +22,9 @@ class BookingFilter(django_filters.FilterSet):
     booking_status = django_filters.ChoiceFilter(
         field_name="status", choices=Booking.BookingStatus.choices
     )
-    booking_type = django_filters.ChoiceFilter(
+    booking_period = django_filters.ChoiceFilter(
         field_name="slot__schedule",
-        choices=(("upcoming", "upcoming"), ("history", "history")),
+        choices=(("upcoming", "upcoming"), ("past", "past")),
         method="filter_status",
     )
 
@@ -47,7 +47,7 @@ class BookingFilter(django_filters.FilterSet):
         model = Booking
         fields = [
             "booking_status",
-            "booking_type",
+            "booking_period",
             "booking_date",
             "cinema_id",
             "movie_id",
@@ -60,7 +60,7 @@ class BookingFilter(django_filters.FilterSet):
         """
         Filters parent queryset based on status:
         - `upcoming`: currently active bookings
-        - `history`: past bookings
+        - `past`: past bookings
         """
 
         now = timezone.now()
@@ -68,7 +68,7 @@ class BookingFilter(django_filters.FilterSet):
         if value == "upcoming":
             return qs.filter(slot__schedule__gte=now)
 
-        if value == "history":
+        if value == "past":
             return qs.filter(slot__schedule__lt=now)
 
         return qs
