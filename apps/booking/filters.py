@@ -1,9 +1,8 @@
 import django_filters
 from django.utils import timezone
 
+from apps.booking.models import Booking
 from apps.core.filters import NumberInFilter
-
-from .models import Booking
 
 
 class BookingFilter(django_filters.FilterSet):
