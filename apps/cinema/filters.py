@@ -1,8 +1,7 @@
 import django_filters
 
+from apps.cinema.models import Cinema
 from apps.core.filters import NumberInFilter
-
-from .models import Cinema
 
 
 class CinemaFilter(django_filters.FilterSet):

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Cinema, Seat
+from apps.cinema.models import Cinema, Seat
 
 
 class CinemaListSerializer(serializers.ModelSerializer):
