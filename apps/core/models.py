@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+from apps.core.managers import ActiveManager
+
 
 class TimeStampedModel(models.Model):
     """
@@ -18,9 +20,16 @@ class TimeStampedModel(models.Model):
 
 
 class ActiveableModel(models.Model):
-    """Abstract model for adding an active state using `is_active` boolean field"""
+    """
+    Abstract model forL
+    - adding an active state using `is_active` boolean field
+    - a custom `active_objects` manager for filtering out only `active` entries
+    """
 
     is_active = models.BooleanField(default=True)
+
+    objects = models.Manager()
+    active_objects = ActiveManager()
 
     class Meta:
         abstract = True

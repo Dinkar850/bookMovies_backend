@@ -1,10 +1,10 @@
 from django.core import validators
 from django.db import models, transaction
 
-from apps.core import models as CoreModels
+from apps.core.models import ActiveableModel, City, TimeStampedModel
 
 
-class Cinema(CoreModels.TimeStampedModel):
+class Cinema(TimeStampedModel):
     """
     Cinema model that contains:
 
@@ -25,9 +25,7 @@ class Cinema(CoreModels.TimeStampedModel):
         help_text="Minimum 5 seats per row are required",
     )
     address = models.TextField()
-    city = models.ForeignKey(
-        CoreModels.City, on_delete=models.CASCADE, related_name="cinemas"
-    )
+    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name="cinemas")
 
     class Meta:
         constraints = [
@@ -47,12 +45,12 @@ class Cinema(CoreModels.TimeStampedModel):
         - If `seats_per_row` or `rows` is updated for an existing cinema, also updates its seats
         """
 
-        is_unique = self.pk is None
+        is_new_cinema = self.pk is None
 
         with transaction.atomic():
             super().save(*args, **kwargs)
 
-            if is_unique:
+            if is_new_cinema:
                 self._create_seats()
             else:
                 self._update_seats()
@@ -118,7 +116,7 @@ class Cinema(CoreModels.TimeStampedModel):
             Seat.objects.bulk_update(to_activate + to_deactivate, ["is_active"])
 
 
-class Seat(CoreModels.TimeStampedModel, CoreModels.ActiveableModel):
+class Seat(TimeStampedModel, ActiveableModel):
     """
     Seat model that contains:
     - **seat_row**: row corresponding to the seat

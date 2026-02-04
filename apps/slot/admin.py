@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Slot
+from apps.slot.models import Slot
 
 
 @admin.register(Slot)
@@ -9,7 +9,7 @@ class SlotAdmin(admin.ModelAdmin):
         "id",
         "is_active",
         "schedule",
-        "end_time",
+        "end_schedule",
         "price",
         "movie",
         "cinema",

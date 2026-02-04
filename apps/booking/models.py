@@ -1,12 +1,12 @@
 from django.db import models
 
-from apps.cinema import models as CinemaModels
-from apps.core import models as CoreModels
-from apps.slot import models as SlotModels
-from apps.user import models as UserModels
+from apps.cinema.models import Seat
+from apps.core.models import TimeStampedModel
+from apps.slot.models import Slot
+from apps.user.models import User
 
 
-class Booking(CoreModels.TimeStampedModel):
+class Booking(TimeStampedModel):
     """
     Booking model that contains:
 
@@ -30,13 +30,9 @@ class Booking(CoreModels.TimeStampedModel):
     status = models.CharField(
         max_length=1, choices=BookingStatus, default=BookingStatus.PENDING
     )
-    slot = models.ForeignKey(
-        SlotModels.Slot, on_delete=models.CASCADE, related_name="bookings"
-    )
-    user = models.ForeignKey(
-        UserModels.User, on_delete=models.CASCADE, related_name="bookings"
-    )
-    seats = models.ManyToManyField(CinemaModels.Seat, related_name="bookings")
+    slot = models.ForeignKey(Slot, on_delete=models.CASCADE, related_name="bookings")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookings")
+    seats = models.ManyToManyField(Seat, related_name="bookings")
 
     def __str__(self):
         return f"Booking #{self.id} ({self.status})"

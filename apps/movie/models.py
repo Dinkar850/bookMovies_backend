@@ -1,10 +1,14 @@
+from datetime import timedelta
+
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
 
-from apps.core import models as CoreModels
+from apps.core.models import Genre, Language, TimeStampedModel
+from apps.movie.constants import MovieErrors
 
 
-class Movie(CoreModels.TimeStampedModel):
+class Movie(TimeStampedModel):
     """
     Movie model that contains:
 
@@ -32,8 +36,17 @@ class Movie(CoreModels.TimeStampedModel):
         db_index=True,
         editable=False,
     )
-    genres = models.ManyToManyField(CoreModels.Genre, related_name="movies")
-    languages = models.ManyToManyField(CoreModels.Language, related_name="movies")
+    genres = models.ManyToManyField(Genre, related_name="movies")
+    languages = models.ManyToManyField(Language, related_name="movies")
+
+    def clean(self, *args, **kwargs):
+        """Clean method for movie that checks if duration is not 0 or negative"""
+
+        super().clean()
+
+        # Validation: Movie's duration is 0 or negative
+        if self.duration <= timedelta(0):
+            raise ValidationError(MovieErrors.INVALID_DURATION)
 
     def save(self, *args, **kwargs):
         """Auto-generates a unique slug from movie name with collision handling"""

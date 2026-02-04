@@ -2,9 +2,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.validators import RegexValidator
 from django.db import models
 
-from apps.core import models as CoreModels
-
-from .managers import UserManager
+from apps.core.models import ActiveableModel, TimeStampedModel
+from apps.user.managers import UserManager
 
 # Validates that phone number has exactly 10 digits and does not start with 0
 phone_validator = RegexValidator(
@@ -14,8 +13,8 @@ phone_validator = RegexValidator(
 
 
 class User(
-    CoreModels.TimeStampedModel,
-    CoreModels.ActiveableModel,
+    TimeStampedModel,
+    ActiveableModel,
     AbstractBaseUser,
     PermissionsMixin,
 ):
