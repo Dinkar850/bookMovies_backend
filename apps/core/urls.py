@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import CityListView, GenreListView, LanguageListView
+from apps.core.views import CityListView, GenreListView, LanguageListView
 
 urlpatterns = [
     path("filters/genres/", GenreListView.as_view(), name="genres"),

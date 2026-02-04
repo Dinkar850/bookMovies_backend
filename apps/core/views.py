@@ -1,8 +1,8 @@
 from rest_framework import generics
 
-from .models import City, Genre, Language
-from .pagination import BaseCursorPagination
-from .serializers import CitySerializer, GenreSerializer, LanguageSerializer
+from apps.core.models import City, Genre, Language
+from apps.core.pagination import BaseCursorPagination
+from apps.core.serializers import CitySerializer, GenreSerializer, LanguageSerializer
 
 
 class ListView(generics.ListAPIView):
