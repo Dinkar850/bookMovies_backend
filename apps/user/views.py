@@ -7,8 +7,12 @@ from rest_framework import generics, permissions, response, status
 from rest_framework.views import APIView
 from rest_framework_simplejwt import exceptions, tokens, views
 
-from .constants import UserErrors, UserMessages
-from .serializers import TokenObtainPairSerializer, UserSerializer, UserUpdateSerializer
+from apps.user.constants import UserErrors, UserMessages
+from apps.user.serializers import (
+    TokenObtainPairSerializer,
+    UserSerializer,
+    UserUpdateSerializer,
+)
 
 
 def set_refresh_cookie(res, refresh_token):
@@ -32,8 +36,17 @@ def set_refresh_cookie(res, refresh_token):
     )
 
 
-def clear_refresh_cookie(res):
-    """Clears refresh cookie from response"""
+def blacklist_refresh_token(req, res):
+    """
+    - Blacklists current refresh token
+    - Clears refresh token from cookie
+    """
+
+    refresh = req.COOKIES.get("refresh")
+
+    if refresh:
+        with contextlib.suppress(Exception):
+            tokens.RefreshToken(refresh).blacklist()
 
     is_prod = not settings.DEBUG
 
@@ -59,7 +72,7 @@ class RegisterView(generics.CreateAPIView):
     Response:
         201 Created
         {
-            "detail": string,
+            "detail": User registered successfully,
             "access": string
         }
 
@@ -71,14 +84,14 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def create(self, request, *args, **kwargs):
+    def create(self, req, *args, **kwargs):
         """
         - Creates new user
         - Generates and sets new refresh token in HttpOnly cookie
         - Sets access token in response body
         """
 
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=req.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
@@ -110,7 +123,7 @@ class LoginView(views.TokenObtainPairView):
     Response:
         200 OK
         {
-            "detail": string,
+            "detail": User logged in successfully,
             "access": string
         }
 
@@ -122,13 +135,13 @@ class LoginView(views.TokenObtainPairView):
 
     serializer_class = TokenObtainPairSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, req, *args, **kwargs):
         """
         - Sets refresh token in HttpOnly cookie
         - Returns access token in response body
         """
 
-        res = super().post(request, *args, **kwargs)
+        res = super().post(req, *args, **kwargs)
 
         if res.status_code != status.HTTP_200_OK:
             return res
@@ -162,7 +175,7 @@ class LogoutView(APIView):
     Response:
         200 OK
         {
-            "detail": string
+            "detail": User logged out successsfully
         }
 
     Errors:
@@ -173,23 +186,17 @@ class LogoutView(APIView):
 
     permission_classes = (permissions.IsAuthenticated,)
 
-    def post(self, request):
+    def post(self, req):
         """
         - Blacklists the previously issues refresh token
         - Clears refresh token from HttpOnly cookie
         """
 
-        refresh = request.COOKIES.get("refresh")
-
-        if refresh:
-            with contextlib.suppress(Exception):
-                tokens.RefreshToken(refresh).blacklist()
-
         res = response.Response(
             {"detail": UserMessages.LOGGED_OUT}, status=status.HTTP_200_OK
         )
 
-        clear_refresh_cookie(res)
+        blacklist_refresh_token(req, res)
 
         return res
 
@@ -271,7 +278,7 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
 
         return UserSerializer
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, req, *args, **kwargs):
         """
         - Responsible for clearing response cookie and deactivating user by setting `is_active` as false
         - Blacklists refresh token of this user
@@ -282,14 +289,8 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
         user.is_active = False
         user.save(update_fields=["is_active"])
 
-        refresh = request.COOKIES.get("refresh")
-
-        if refresh:
-            with contextlib.suppress(Exception):
-                tokens.RefreshToken(refresh).blacklist()
-
         res = response.Response(status=status.HTTP_204_NO_CONTENT)
-        clear_refresh_cookie(res)
+        blacklist_refresh_token(req, res)
 
         return res
 
@@ -324,13 +325,13 @@ class TokenRefreshView(views.TokenRefreshView):
             - Invalid, blacklisted or expired token
     """
 
-    def post(self, request, *args, **kwargs):
+    def post(self, req, *args, **kwargs):
         """
         - Overrides post mixin for accessing refresh token from HttpOnly cookie
         - Rotates refresh token, also blacklists previously issued refresh token
         """
 
-        refresh = request.COOKIES.get("refresh")
+        refresh = req.COOKIES.get("refresh")
 
         if not refresh:
             return response.Response(
@@ -339,7 +340,7 @@ class TokenRefreshView(views.TokenRefreshView):
             )
 
         # For cases when request.data is immutable
-        data = request.data.copy()
+        data = req.data.copy()
         data["refresh"] = refresh
 
         serializer = self.get_serializer(data=data)
