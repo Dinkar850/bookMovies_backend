@@ -35,11 +35,11 @@ class SlotBaseTest(test.APITestCase):
         cls.movie.languages.add(cls.language)
 
     def create_slot(self, start, duration_hours=2):
-        end = (start + timedelta(hours=duration_hours)).time()
+        end = start + timedelta(hours=duration_hours)
 
         return Slot(
             schedule=start,
-            end_time=end,
+            end_schedule=end,
             price=212,
             movie=self.movie,
             cinema=self.cinema,
@@ -65,7 +65,7 @@ class TestSlotModelValidation(SlotBaseTest):
 
         slot = Slot(
             schedule=start,
-            end_time=(start - timedelta(hours=1)).time(),
+            end_schedule=(start - timedelta(hours=1)),
             price=212,
             movie=self.movie,
             cinema=self.cinema,
@@ -95,7 +95,7 @@ class TestSlotModelValidation(SlotBaseTest):
 
         slot = Slot(
             schedule=self.now + timedelta(hours=1),
-            end_time=(self.now + timedelta(hours=3)).time(),
+            end_schedule=(self.now + timedelta(hours=3)),
             price=212,
             movie=self.movie,
             cinema=self.cinema,
@@ -130,7 +130,7 @@ class TestSlotAPI(SlotBaseTest):
     def setUp(self):
         self.slot = Slot.objects.create(
             schedule=self.now + timedelta(hours=1),
-            end_time=(self.now + timedelta(hours=3)).time(),
+            end_schedule=(self.now + timedelta(hours=3)),
             price=212,
             movie=self.movie,
             cinema=self.cinema,

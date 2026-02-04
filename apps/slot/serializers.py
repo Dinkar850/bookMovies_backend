@@ -2,8 +2,7 @@ from rest_framework import serializers
 
 from apps.cinema import serializers as CinemaSerializers
 from apps.movie.serializers import MovieNameSerializer
-
-from .models import Slot
+from apps.slot.models import Slot
 
 
 class SlotListSerializer(serializers.ModelSerializer):

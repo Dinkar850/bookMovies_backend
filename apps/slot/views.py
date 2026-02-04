@@ -4,10 +4,9 @@ from django.utils import timezone
 from apps.booking import models as BookingModels
 from apps.cinema import models as CinemaModels
 from apps.core.viewsets import ReadOnlyModelViewset
-
-from .filters import SlotFilter
-from .models import Slot
-from .serializers import SlotDetailsSerializer, SlotListSerializer
+from apps.slot.filters import SlotFilter
+from apps.slot.models import Slot
+from apps.slot.serializers import SlotDetailsSerializer, SlotListSerializer
 
 
 class SlotViewset(ReadOnlyModelViewset):
@@ -61,7 +60,7 @@ class SlotViewset(ReadOnlyModelViewset):
     GET /api/slots/{id}/
 
     Description:
-        - Returns detailed information for a single active slot (not expired and `is_active=True`)
+        - Returns detailed information for a single active slot (not expired)
         - Includes cinema seating layout
         - Includes booked seats
         - Includes currently active seats
@@ -129,14 +128,14 @@ class SlotViewset(ReadOnlyModelViewset):
         now = timezone.now()
 
         base_queryset = (
-            Slot.objects.filter(is_active=True, schedule__gte=now)
+            Slot.active_objects.filter(schedule__gte=now)
             .order_by("schedule")
             .select_related("movie", "cinema__city", "language")
         )
 
         if self.action == "retrieve":
             # queryset for fetching and ordering all seats
-            cinema_seats = CinemaModels.Seat.objects.order_by("id")
+            cinema_seats = CinemaModels.Seat.active_objects.order_by("id")
 
             # queryset for filtering confirmed bookings and then fetching only active seats for each booking
             confirmed_bookings_queryset = BookingModels.Booking.objects.filter(
@@ -144,7 +143,7 @@ class SlotViewset(ReadOnlyModelViewset):
             ).prefetch_related(
                 Prefetch(
                     "seat",
-                    queryset=cinema_seats.filter(is_active=True),
+                    queryset=cinema_seats,
                     to_attr="booked_seats",
                 )
             )
@@ -159,7 +158,7 @@ class SlotViewset(ReadOnlyModelViewset):
                 # prefetch responsible for populating `active_seats`` attribute in slot object for that cinema
                 Prefetch(
                     "cinema__seats",
-                    queryset=cinema_seats.filter(is_active=True),
+                    queryset=cinema_seats,
                     to_attr="active_seats",
                 ),
             )
