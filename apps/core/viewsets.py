@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 
-from .pagination import BaseCursorPagination
+from apps.core.pagination import BaseCursorPagination
 
 
 class ReadOnlyModelViewset(viewsets.ReadOnlyModelViewSet):

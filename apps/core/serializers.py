@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import City, Genre, Language
+from apps.core.models import City, Genre, Language
 
 
 class GenreSerializer(serializers.ModelSerializer):

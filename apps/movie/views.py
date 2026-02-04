@@ -1,10 +1,9 @@
 from django.utils import timezone
 
 from apps.core.viewsets import ReadOnlyModelViewset
-
-from .filters import MovieFilter
-from .models import Movie
-from .serializers import MovieDetailsSerializer, MovieListSerializer
+from apps.movie.filters import MovieFilter
+from apps.movie.models import Movie
+from apps.movie.serializers import MovieDetailsSerializer, MovieListSerializer
 
 
 class MovieViewset(ReadOnlyModelViewset):
@@ -38,7 +37,7 @@ class MovieViewset(ReadOnlyModelViewset):
         {
             "next": null,
             "previous": null,
-            [
+            "results": [
                 {
                     "id": int,
                     "name": string,
