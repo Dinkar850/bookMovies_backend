@@ -2,13 +2,12 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
+from apps.booking.constants import BookingDefaults, BookingErrors
+from apps.booking.models import Booking
 from apps.cinema import serializers as CinemaSerializers
 from apps.cinema.models import Seat
 from apps.slot.models import Slot
 from apps.slot.serializers import SlotListSerializer
-
-from .constants import BookingDefaults, BookingErrors
-from .models import Booking
 
 
 class BookingCreateRequestSerializer(serializers.ModelSerializer):
@@ -33,12 +32,12 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
 
     # Validation: Existence of seat in cinema and that it is active
     seats = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Seat.objects.filter(is_active=True), allow_empty=False
+        many=True, queryset=Seat.active_objects, allow_empty=False
     )
 
     # Validation: Existence of an active slot beyond current date and time
     slot = serializers.PrimaryKeyRelatedField(
-        queryset=Slot.objects.filter(is_active=True, schedule__gte=timezone.now())
+        queryset=Slot.active_objects.filter(schedule__gte=timezone.now())
     )
 
     class Meta:

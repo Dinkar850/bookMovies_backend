@@ -44,7 +44,7 @@ class BookingBaseTest(test.APITestCase):
 
         cls.slot = Slot.objects.create(
             schedule=cls.now + timedelta(hours=1),
-            end_time=(cls.now + timedelta(hours=3)).time(),
+            end_schedule=(cls.now + timedelta(hours=3)),
             price=212,
             movie=cls.movie,
             cinema=cls.cinema,

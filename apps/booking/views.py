@@ -7,16 +7,15 @@ from rest_framework import (
     status,
 )
 
-from apps.core.viewsets import ModelViewset
-
-from .constants import BookingErrors, BookingMessages
-from .filters import BookingFilter
-from .models import Booking
-from .serializers import (
+from apps.booking.constants import BookingErrors, BookingMessages
+from apps.booking.filters import BookingFilter
+from apps.booking.models import Booking
+from apps.booking.serializers import (
     BookingCreateRequestSerializer,
     BookingCreateResponseSerializer,
     BookingListSerializer,
 )
+from apps.core.viewsets import ModelViewset
 
 
 class BookingViewSet(ModelViewset):
