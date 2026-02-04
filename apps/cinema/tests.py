@@ -36,7 +36,7 @@ class TestCinemaViews(test.APITestCase):
             cinema=cls.cinema_active,
             language=cls.language,
             schedule=now + timedelta(days=1),
-            end_time=(now + timedelta(days=1, hours=2)).time(),
+            end_schedule=(now + timedelta(days=1, hours=2)),
             price=212,
             is_active=True,
         )
@@ -54,7 +54,7 @@ class TestCinemaViews(test.APITestCase):
             cinema=cls.cinema_inactive,
             language=cls.language,
             schedule=now + timedelta(days=1),
-            end_time=(now + timedelta(days=1, hours=2)).time(),
+            end_schedule=(now + timedelta(days=1, hours=2)),
             price=212,
             is_active=False,
         )

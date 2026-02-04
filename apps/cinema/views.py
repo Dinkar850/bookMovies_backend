@@ -1,10 +1,9 @@
 from django.utils import timezone
 
+from apps.cinema.filters import CinemaFilter
+from apps.cinema.models import Cinema
+from apps.cinema.serializers import CinemaDetailsSerializer, CinemaListSerializer
 from apps.core.viewsets import ReadOnlyModelViewset
-
-from .filters import CinemaFilter
-from .models import Cinema
-from .serializers import CinemaDetailsSerializer, CinemaListSerializer
 
 
 class CinemaViewset(ReadOnlyModelViewset):
