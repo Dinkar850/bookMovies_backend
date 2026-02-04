@@ -1,8 +1,7 @@
 import django_filters
 
 from apps.core.filters import NumberInFilter
-
-from .models import Slot
+from apps.slot.models import Slot
 
 
 class SlotFilter(django_filters.FilterSet):

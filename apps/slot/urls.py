@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import SlotViewset
+from apps.slot.views import SlotViewset
 
 router = DefaultRouter()
 router.register(r"slots", SlotViewset, basename="slots")
