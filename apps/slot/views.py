@@ -142,7 +142,7 @@ class SlotViewset(ReadOnlyModelViewset):
                 status=BookingModels.Booking.BookingStatus.BOOKED
             ).prefetch_related(
                 Prefetch(
-                    "seat",
+                    "seats",
                     queryset=cinema_seats,
                     to_attr="booked_seats",
                 )
