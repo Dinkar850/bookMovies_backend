@@ -31,44 +31,56 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
     """
 
     # Validation: Existence of seat in cinema and that it is active
-    seats = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Seat.active_objects, allow_empty=False
+    # seats = serializers.PrimaryKeyRelatedField(
+    #     many=True, queryset=Seat.active_objects, allow_empty=False, write_only=True
+    # )
+
+    seats = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
     )
 
     # Validation: Existence of an active slot beyond current date and time
     slot = serializers.PrimaryKeyRelatedField(
-        queryset=Slot.active_objects.filter(schedule__gte=timezone.now())
+        queryset=Slot.active_objects.filter(schedule__gte=timezone.now()),
+        write_only=True,
     )
 
     class Meta:
         model = Booking
         fields = ("slot", "seats")
 
-    def validate(self, attrs):
+    def validate_seats(self, seat_ids):
         """
-        Validates the following before insertion:
-        - Duplicate seats are not passed
-        - Maximum MAX_SEATS_PER_BOOKING seats can be booked per booking
-        - Entered seat does not belong to the cinema of the slot
-        - Entered seat is already booked for the slot
+        Validate seats for:
+        - No duplicate seat(s) are entered
+        - Maximum MAX_SEATS_PER_BOOKING are booked
         """
-
-        slot = attrs["slot"]
-        seats = attrs["seats"]
-        cinema = slot.cinema
-        seat_ids = [seat.id for seat in seats]
 
         # Validation: Duplicate seats are not passed
         if len(set(seat_ids)) < len(seat_ids):
-            raise serializers.ValidationError({"seats": BookingErrors.DUPLICATE_SEATS})
+            raise serializers.ValidationError(BookingErrors.DUPLICATE_SEATS)
 
         # Validation: Maximum MAX_SEATS_PER_BOOKING seats can be booked per booking
-        if len(seats) > BookingDefaults.MAX_SEATS_PER_BOOKING:
-            raise serializers.ValidationError(
-                {"seats": BookingErrors.EXCEEDED_SEATS_LIMIT}
-            )
+        if len(seat_ids) > BookingDefaults.MAX_SEATS_PER_BOOKING:
+            raise serializers.ValidationError(BookingErrors.EXCEEDED_SEATS_LIMIT)
 
-        # Validation: Entered seat does not belong to the cinema of the slot
+        return seat_ids
+
+    def validate(self, attrs):
+        """
+        Validates the following before insertion:
+        - Entered seat belongs to the cinema of the slot
+        - Entered seat is not already booked for that slot
+        """
+
+        slot = attrs["slot"]
+        seat_ids = attrs["seats"]
+        cinema = slot.cinema
+
+        seats = list(Seat.active_objects.filter(id__in=seat_ids, cinema=cinema))
+
+        # Validation: Entered seat belonga to the cinema of the slot
 
         invalid_seat_ids = [seat.id for seat in seats if seat.cinema_id != cinema.id]
 
@@ -77,10 +89,10 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
                 {"seats": f"{BookingErrors.INVALID_CINEMA}: {invalid_seat_ids}"}
             )
 
-        # Validation: Entered seat is already booked for the slot
+        # Validation: Entered seat is not already booked for that slot
 
         already_booked_seat_ids = list(
-            Seat.objects.filter(
+            Seat.active_objects.filter(
                 bookings__slot=slot,
                 bookings__status=Booking.BookingStatus.BOOKED,
                 id__in=seat_ids,
