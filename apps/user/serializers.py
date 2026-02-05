@@ -53,13 +53,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     {
         "first_name": string,
         "last_name": string,
-        "phone_number": string
+        "phone_number": string,
+        "profile_image": string,
     }
     """
 
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "phone_number")
+        fields = ("first_name", "last_name", "phone_number", "profile_image")
 
 
 class TokenObtainPairSerializer(jwtSerializers.TokenObtainPairSerializer):

@@ -1,8 +1,6 @@
 import contextlib
 
 from django.conf import settings
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
 from rest_framework import generics, permissions, response, status
 from rest_framework.views import APIView
 from rest_framework_simplejwt import exceptions, tokens, views
@@ -201,7 +199,7 @@ class LogoutView(APIView):
         return res
 
 
-class UserView(generics.RetrieveUpdateDestroyAPIView):
+class UserView(generics.RetrieveUpdateAPIView):
     """
     Endpoints for managing current authenticated user
     - /api/user/
@@ -210,7 +208,7 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
         - IsAuthenticated
 
     Allowed Methods:
-        GET, PATCH, DELETE
+        GET, PATCH
 
 
     GET:
@@ -234,7 +232,8 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
             {
                 "first_name": string,
                 "last_name": string,
-                "phone_number": string
+                "phone_number": string,
+                "profile_image": string,
                 ...
             }
 
@@ -246,14 +245,6 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
                 "phone_number": string
             }
 
-
-    DELETE:
-        - Sets user inactive
-        - Blacklists refresh token
-        - Clears cookie
-
-        Response:
-            204 No Content
 
     Errors:
         401 Unauthorized:
@@ -278,24 +269,8 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
 
         return UserSerializer
 
-    def destroy(self, req, *args, **kwargs):
-        """
-        - Responsible for clearing response cookie and deactivating user by setting `is_active` as false
-        - Blacklists refresh token of this user
-        - Clears refresh token from HttpOnly cookie
-        """
 
-        user = self.get_object()
-        user.is_active = False
-        user.save(update_fields=["is_active"])
-
-        res = response.Response(status=status.HTTP_204_NO_CONTENT)
-        blacklist_refresh_token(req, res)
-
-        return res
-
-
-@method_decorator(csrf_protect, name="dispatch")
+# @method_decorator(csrf_protect, name="dispatch")
 class TokenRefreshView(views.TokenRefreshView):
     """
     POST /api/auth/token/refresh/
@@ -320,9 +295,9 @@ class TokenRefreshView(views.TokenRefreshView):
 
     Errors:
         400 Bad Request:
-            - Missing refresh token
+            - Missing refresh token in cookie
         401 Unauthorized:
-            - Invalid, blacklisted or expired token
+            - Given refresh token is invalid, blacklisted or expired
     """
 
     def post(self, req, *args, **kwargs):
@@ -335,7 +310,7 @@ class TokenRefreshView(views.TokenRefreshView):
 
         if not refresh:
             return response.Response(
-                {"detail": UserErrors.INVALID_REFRESH_TOKEN},
+                {"detail": UserErrors.MISSING_REFRESH_TOKEN},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
