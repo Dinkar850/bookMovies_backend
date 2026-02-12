@@ -1,6 +1,8 @@
 import contextlib
 
 from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 from rest_framework import generics, permissions, response, status
 from rest_framework.views import APIView
 from rest_framework_simplejwt import exceptions, tokens, views
@@ -13,14 +15,26 @@ from apps.user.serializers import (
 )
 
 
-def set_refresh_cookie(res, refresh_token):
+def is_mobile_client(req):
+    """
+    Determines whether request comes from mobile/native client
+
+    Mobile clients must send:
+        X-Client-Type: mobile
+    """
+    return req.headers.get("X-Client-Type") == "mobile"
+
+
+def set_refresh_cookie(req, res, refresh_token):
     """
     Sets refresh token cookie with `max_age` derived from `SIMPLE_JWT['REFRESH_TOKEN_LIFETIME']`
+    Mobile clients receive refresh in response body
     """
 
-    max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
+    if is_mobile_client(req):
+        return
 
-    # Checks for production mode to enable cross origin security accordingly
+    max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
     is_prod = not settings.DEBUG
 
     res.set_cookie(
@@ -37,22 +51,24 @@ def set_refresh_cookie(res, refresh_token):
 def blacklist_refresh_token(req, res):
     """
     - Blacklists current refresh token
-    - Clears refresh token from cookie
+    - Clears refresh token from cookie for web
     """
 
-    refresh = req.COOKIES.get("refresh")
+    refresh = (
+        req.data.get("refresh") if is_mobile_client(req) else req.COOKIES.get("refresh")
+    )
 
     if refresh:
         with contextlib.suppress(Exception):
             tokens.RefreshToken(refresh).blacklist()
 
-    is_prod = not settings.DEBUG
-
-    res.delete_cookie(
-        key="refresh",
-        samesite="None" if is_prod else "Lax",
-        path="/api/auth",
-    )
+    if not is_mobile_client(req):
+        is_prod = not settings.DEBUG
+        res.delete_cookie(
+            key="refresh",
+            samesite="None" if is_prod else "Lax",
+            path="/api/auth",
+        )
 
 
 class RegisterView(generics.CreateAPIView):
@@ -101,7 +117,10 @@ class RegisterView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
         )
 
-        set_refresh_cookie(res, str(refresh))
+        set_refresh_cookie(req, res, str(refresh))
+
+        if is_mobile_client(req):
+            res.data["refresh"] = str(refresh)
 
         return res
 
@@ -154,7 +173,11 @@ class LoginView(views.TokenObtainPairView):
             {"detail": UserMessages.LOGGED_IN, "access": access},
             status=status.HTTP_200_OK,
         )
-        set_refresh_cookie(res, refresh)
+
+        set_refresh_cookie(req, res, refresh)
+
+        if is_mobile_client(req):
+            res.data["refresh"] = refresh
 
         return res
 
@@ -186,7 +209,7 @@ class LogoutView(APIView):
 
     def post(self, req):
         """
-        - Blacklists the previously issues refresh token
+        - Blacklists the previously issued refresh token
         - Clears refresh token from HttpOnly cookie
         """
 
@@ -270,7 +293,7 @@ class UserView(generics.RetrieveUpdateAPIView):
         return UserSerializer
 
 
-# @method_decorator(csrf_protect, name="dispatch")
+@method_decorator(csrf_protect, name="dispatch")
 class TokenRefreshView(views.TokenRefreshView):
     """
     POST /api/auth/token/refresh/
@@ -306,7 +329,11 @@ class TokenRefreshView(views.TokenRefreshView):
         - Rotates refresh token, also blacklists previously issued refresh token
         """
 
-        refresh = req.COOKIES.get("refresh")
+        refresh = (
+            req.data.get("refresh")
+            if is_mobile_client(req)
+            else req.COOKIES.get("refresh")
+        )
 
         if not refresh:
             return response.Response(
@@ -333,7 +360,11 @@ class TokenRefreshView(views.TokenRefreshView):
 
         res = response.Response(serializer.validated_data, status=status.HTTP_200_OK)
 
+        # Set refresh in cookie for web and in body for mobile
         if new_refresh:
-            set_refresh_cookie(res, new_refresh)
+            set_refresh_cookie(req, res, new_refresh)
+
+            if is_mobile_client(req):
+                res.data["refresh"] = new_refresh
 
         return res
