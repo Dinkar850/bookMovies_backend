@@ -30,11 +30,6 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
         - Seat and active slot must exist
     """
 
-    # Validation: Existence of seat in cinema and that it is active
-    # seats = serializers.PrimaryKeyRelatedField(
-    #     many=True, queryset=Seat.active_objects, allow_empty=False, write_only=True
-    # )
-
     seats = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True,
@@ -112,27 +107,47 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        - Creates boooking based on the slot
+        - Creates boooking based on the slot with row level locking
         - Sets the related seat in the through table with corresponding booking ID
         - Uses atomic transaction for performing the above operations
         """
 
         slot = validated_data["slot"]
-        seats = validated_data["seats"]
+        seat_ids = validated_data["seats"]
 
         user = self.context["request"].user
 
-        # Prevents creation of bookings without setting seats or vice-versa
         with transaction.atomic():
+            # Lock rows
+            seats = list(
+                Seat.active_objects.select_for_update().filter(  # row lock
+                    id__in=seat_ids, cinema=slot.cinema
+                )
+            )
+
+            # Re-check booking inside lock
+            already_booked = Seat.active_objects.filter(
+                bookings__slot=slot,
+                bookings__status=Booking.BookingStatus.BOOKED,
+                id__in=seat_ids,
+            ).exists()
+
+            if already_booked:
+                raise serializers.ValidationError(
+                    {"seats": BookingErrors.SEATS_ALREADY_BOOKED}
+                )
+
+            # Create booking if not already booked before
             booking = Booking.objects.create(
                 user=user,
                 slot=slot,
                 status=Booking.BookingStatus.BOOKED,
             )
 
+            # Set seat ids corresponding to each booking id
             booking.seats.set(seats)
 
-        return booking
+            return booking
 
 
 class BookingCreateResponseSerializer(serializers.ModelSerializer):
