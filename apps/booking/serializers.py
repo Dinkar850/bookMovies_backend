@@ -73,15 +73,18 @@ class BookingCreateRequestSerializer(serializers.ModelSerializer):
         seat_ids = attrs["seats"]
         cinema = slot.cinema
 
+        # Validation: Entered seat belongs to the cinema of the slot
+
         seats = list(Seat.active_objects.filter(id__in=seat_ids, cinema=cinema))
 
-        # Validation: Entered seat belonga to the cinema of the slot
+        found_ids = {seat.id for seat in seats}
+        requested_ids = set(seat_ids)
 
-        invalid_seat_ids = [seat.id for seat in seats if seat.cinema_id != cinema.id]
+        missing_ids = requested_ids - found_ids
 
-        if invalid_seat_ids:
+        if missing_ids:
             raise serializers.ValidationError(
-                {"seats": f"{BookingErrors.INVALID_CINEMA}: {invalid_seat_ids}"}
+                {"seats": f"{BookingErrors.INVALID_CINEMA}: {list(missing_ids)}"}
             )
 
         # Validation: Entered seat is not already booked for that slot
