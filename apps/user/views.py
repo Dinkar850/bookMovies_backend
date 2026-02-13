@@ -1,8 +1,6 @@
 import contextlib
 
 from django.conf import settings
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
 from rest_framework import generics, permissions, response, status
 from rest_framework.views import APIView
 from rest_framework_simplejwt import exceptions, tokens, views
@@ -293,7 +291,6 @@ class UserView(generics.RetrieveUpdateAPIView):
         return UserSerializer
 
 
-@method_decorator(csrf_protect, name="dispatch")
 class TokenRefreshView(views.TokenRefreshView):
     """
     POST /api/auth/token/refresh/
