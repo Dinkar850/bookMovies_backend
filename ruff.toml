@@ -17,4 +17,4 @@ fixable = ["ALL"]
 "**/__init__.py" = ["F401"]
 
 [lint.isort]
-known-first-party = ["users"]
+known-first-party = ["apps"]
