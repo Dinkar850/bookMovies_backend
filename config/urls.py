@@ -39,6 +39,8 @@ urlpatterns = [
                 ),
                 # App endpoints
                 path("", include("apps.user.urls")),
+                path("", include("apps.core.urls")),
+                path("", include("apps.movie.urls")),
             ]
         ),
     ),
